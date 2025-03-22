@@ -39,7 +39,7 @@ function App() {
           end: isRepeating ? endMinutes * 60 + endSeconds : undefined
         },
         width: '100%',
-        height: videoHeight
+        height: parseInt(videoHeight) > 360 ? '360px' : videoHeight
       });
     };
 
@@ -73,7 +73,7 @@ function App() {
     <>
       <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
       <div className="flex flex-col items-center">
-        <div className="w-full relative" style={{paddingBottom: '56.25%'}}>
+        <div className="w-full relative" style={{paddingBottom: '56.25%', maxWidth: '640px'}}>
           <div className="absolute top-0 left-0 w-full h-full">
             <YouTube
               videoId={videoId}
