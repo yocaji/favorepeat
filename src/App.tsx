@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react'
-import './App.css'
 import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube'
 
 function App() {
@@ -23,37 +22,42 @@ const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
 
   return (
     <>
-      <h1>BY THE REPEAT</h1>
-      <div>
-        <YouTube
-          videoId={videoId}
-          opts={{ playerVars: { start, end } }}
-          onReady={onPlayerReady}
-          onStateChange={onPlayerStateChange}
-        />
-        <div>
-          <label>
+      <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
+      <div className="flex flex-col items-center">
+        <div className="w-full">
+          <YouTube
+            videoId={videoId}
+            opts={{ playerVars: { start, end }, width: '100%', height: 'auto' }}
+            onReady={onPlayerReady}
+            onStateChange={onPlayerStateChange}
+          />
+        </div>
+        <div className="mt-4">
+          <label className="block">
             Video ID:
             <input
               type="text"
               value={videoId}
               onChange={(e) => setVideoId(e.target.value)}
+              className="border rounded p-1 w-full"
             />
           </label>
-          <label>
+          <label className="block mt-2">
             Start:
             <input
               type="number"
               value={start}
               onChange={(e) => setStart(Number(e.target.value))}
+              className="border rounded p-1 w-full"
             />
           </label>
-          <label>
+          <label className="block mt-2">
             End:
             <input
               type="number"
               value={end}
               onChange={(e) => setEnd(Number(e.target.value))}
+              className="border rounded p-1 w-full"
             />
           </label>
         </div>
