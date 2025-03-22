@@ -1,5 +1,6 @@
-import {useState, useRef, useEffect} from 'react'
+import {useState, useRef, useEffect, useCallback} from 'react'
 import YouTube, {YouTubeProps, YouTubePlayer} from 'react-youtube'
+import * as React from "react";
 
 function App() {
 
@@ -14,6 +15,18 @@ function App() {
   const [videoHeight, setVideoHeight] = useState('auto')
   const [isRepeating, setIsRepeating] = useState(false)
   const [opts, setOpts] = useState({})
+
+  const updateOpts = useCallback(() => {
+    const currentTime = playerRef.current?.getCurrentTime();
+    setOpts({
+      playerVars: {
+        start: isRepeating ? startMinutes * 60 + startSeconds : currentTime,
+        end: isRepeating ? endMinutes * 60 + endSeconds : undefined
+      },
+      width: '100%',
+      height: parseInt(videoHeight) > 360 ? '360px' : videoHeight
+    });
+  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, videoHeight]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
@@ -31,20 +44,8 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const fetchOpts = async () => {
-      const currentTime = await playerRef.current?.getCurrentTime();
-      setOpts({
-        playerVars: {
-          start: isRepeating ? startMinutes * 60 + startSeconds : currentTime,
-          end: isRepeating ? endMinutes * 60 + endSeconds : undefined
-        },
-        width: '100%',
-        height: parseInt(videoHeight) > 360 ? '360px' : videoHeight
-      });
-    };
-
-    fetchOpts();
-  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, videoHeight]);
+    updateOpts();
+  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, updateOpts]);
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target
@@ -65,9 +66,24 @@ function App() {
   }
 
   const handleSave = () => {
-    setVideoId(tempVideoId)
-    setIsEditing(false)
+    setVideoId(tempVideoId);
+    setIsEditing(false);
   }
+
+  const setTimeToCurrent = async (
+    setMinutes: React.Dispatch<React.SetStateAction<number>>, 
+    setSeconds: React.Dispatch<React.SetStateAction<number>>
+  ): Promise<void> => {
+    if (playerRef.current) {
+      const currentTime = await playerRef.current.getCurrentTime();
+      setMinutes(Math.floor(currentTime / 60));
+      setSeconds(Math.floor(currentTime % 60));
+    }
+  };
+
+  const setStartTimeToCurrent = () => setTimeToCurrent(setStartMinutes, setStartSeconds);
+
+  const setEndTimeToCurrent = () => setTimeToCurrent(setEndMinutes, setEndSeconds);
 
   return (
     <>
@@ -118,20 +134,24 @@ function App() {
               Start Time:
               <div className="flex space-x-2">
                 <input
-                  type="number"
+                  type="tel"
                   value={startMinutes}
                   onChange={(e) => setStartMinutes(Number(e.target.value))}
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  disabled={!isRepeating}
                 />
                 <span>:</span>
                 <input
-                  type="number"
+                  type="tel"
                   value={startSeconds}
                   onChange={(e) => setStartSeconds(Number(e.target.value))}
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  disabled={!isRepeating}
                 />
+                <button
+                  onClick={setStartTimeToCurrent}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  Now
+                </button>
               </div>
             </label>
           </div>
@@ -140,20 +160,24 @@ function App() {
               End Time:
               <div className="flex space-x-2">
                 <input
-                  type="number"
+                  type="tel"
                   value={endMinutes}
                   onChange={(e) => setEndMinutes(Number(e.target.value))}
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  disabled={!isRepeating}
                 />
                 <span>:</span>
                 <input
-                  type="number"
+                  type="tel"
                   value={endSeconds}
                   onChange={(e) => setEndSeconds(Number(e.target.value))}
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  disabled={!isRepeating}
                 />
+                <button
+                  onClick={setEndTimeToCurrent}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  Now
+                </button>
               </div>
             </label>
           </div>
