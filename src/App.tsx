@@ -23,7 +23,7 @@ const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
 
   return (
     <>
-      <h1>Kaelipse</h1>
+      <h1>BY THE REPEAT</h1>
       <div>
         <YouTube
           videoId={videoId}
