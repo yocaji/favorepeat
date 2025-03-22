@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube'
+import {useState, useRef} from 'react'
+import YouTube, {YouTubeProps, YouTubePlayer} from 'react-youtube'
 
 function App() {
 
@@ -7,18 +7,25 @@ function App() {
   const [start, setStart] = useState(0)
   const [end, setEnd] = useState(10)
   const [videoId, setVideoId] = useState("SR_DgMTC_ho")
+  const [isEditing, setIsEditing] = useState(false)
+  const [tempVideoId, setTempVideoId] = useState(videoId)
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target
   }
 
-const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-      if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
-        playerRef.current.seekTo(start, true).catch((error) => {
-          console.error('Error seeking to start:', error)
-        })
-      }
+  const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
+    if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
+      playerRef.current.seekTo(start, true).catch((error) => {
+        console.error('Error seeking to start:', error)
+      })
     }
+  }
+
+  const handleSave = () => {
+    setVideoId(tempVideoId)
+    setIsEditing(false)
+  }
 
   return (
     <>
@@ -27,7 +34,7 @@ const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
         <div className="w-full">
           <YouTube
             videoId={videoId}
-            opts={{ playerVars: { start, end }, width: '100%', height: 'auto' }}
+            opts={{playerVars: {start, end}, width: '100%', height: 'auto'}}
             onReady={onPlayerReady}
             onStateChange={onPlayerStateChange}
           />
@@ -35,12 +42,21 @@ const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
         <div className="mt-4">
           <label className="block">
             Video ID:
-            <input
-              type="text"
-              value={videoId}
-              onChange={(e) => setVideoId(e.target.value)}
-              className="border rounded p-1 w-full"
-            />
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={tempVideoId}
+                onChange={(e) => setTempVideoId(e.target.value)}
+                className="border rounded p-1 w-full"
+                disabled={!isEditing}
+              />
+              <button
+                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                className="ml-2 p-1 border rounded"
+              >
+                {isEditing ? 'Save' : 'Edit'}
+              </button>
+            </div>
           </label>
           <label className="block mt-2">
             Start:
