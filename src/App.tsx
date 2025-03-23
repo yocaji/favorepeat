@@ -29,7 +29,7 @@ function App() {
         end: isRepeating ? endMinutes * 60 + endSeconds : undefined,
       },
       width: '100%',
-      height: Number.parseInt(videoHeight) > 360 ? '360px' : videoHeight,
+      height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
     });
   }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, videoHeight]);
 
@@ -160,9 +160,9 @@ function App() {
       <div className="flex flex-col items-center">
         <div
           className="w-full relative"
-          style={{ paddingBottom: '56.25%', maxWidth: '640px' }}
+          style={{ maxWidth: '448px', maxHeight: '252px' }}
         >
-          <div className="absolute top-0 left-0 w-full h-full">
+          <div className="w-full h-full">
             <YouTube
               videoId={videoId}
               opts={opts}
@@ -171,9 +171,11 @@ function App() {
             />
           </div>
         </div>
-        <div className="m-4">
-          <label className="block">
-            Video ID:
+        <div className="m-4 w-full max-w-md">
+          <div className="block">
+            <label className="text-sm font-bold">
+              Video ID
+            </label>
             <div className="flex items-center">
               <input
                 type="text"
@@ -192,76 +194,78 @@ function App() {
                 {isEditing ? 'Save' : 'Edit'}
               </button>
             </div>
-          </label>
-          <div className="mt-4">
-            <div className="flex space-x-2">
-              <label className="block w-full">
-                Section Start Time:
-                <div className="flex space-x-2">
-                  <input
-                    type="tel"
-                    value={tempStartMinutes}
-                    onChange={(e) => setTempStartMinutes(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  />
-                  <span>:</span>
-                  <input
-                    type="tel"
-                    value={tempStartSeconds}
-                    onChange={(e) => setTempStartSeconds(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  />
-                  <button
-                    type={'button'}
-                    onClick={() => setTimeToCurrent(setTempStartMinutes, setTempStartSeconds)}
-                    className="ml-2 p-2 rounded bg-black text-white"
-                  >
-                    Now
-                  </button>
-                </div>
+          </div>
+          <div className="mt-2">
+            <div className="block">
+              <label className="text-sm font-bold">
+                Start from
               </label>
+              <div className="flex items-center">
+                <input
+                  type="tel"
+                  value={tempStartMinutes}
+                  onChange={(e) => setTempStartMinutes(Number(e.target.value))}
+                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                />
+                <span className="mx-1">:</span>
+                <input
+                  type="tel"
+                  value={tempStartSeconds}
+                  onChange={(e) => setTempStartSeconds(Number(e.target.value))}
+                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                />
+                <button
+                  type={'button'}
+                  onClick={() => setTimeToCurrent(setTempStartMinutes, setTempStartSeconds)}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  Now
+                </button>
+              </div>
             </div>
-            <div className="flex space-x-2 mt-2">
-              <label className="block w-full">
-                Section End Time:
-                <div className="flex space-x-2">
-                  <input
-                    type="tel"
-                    value={tempEndMinutes}
-                    onChange={(e) => setTempEndMinutes(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  />
-                  <span>:</span>
-                  <input
-                    type="tel"
-                    value={tempEndSeconds}
-                    onChange={(e) => setTempEndSeconds(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                  />
-                  <button
-                    type={'button'}
-                    onClick={() => setTimeToCurrent(setTempEndMinutes, setTempEndSeconds)}
-                    className="ml-2 p-2 rounded bg-black text-white"
-                  >
-                    Now
-                  </button>
-                </div>
+            <div className="block mt-2">
+              <label className="text-sm font-bold">
+                End at
               </label>
+              <div className="flex items-center">
+                <input
+                  type="tel"
+                  value={tempEndMinutes}
+                  onChange={(e) => setTempEndMinutes(Number(e.target.value))}
+                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                />
+                <span className="mx-1">:</span>
+                <input
+                  type="tel"
+                  value={tempEndSeconds}
+                  onChange={(e) => setTempEndSeconds(Number(e.target.value))}
+                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                />
+                <button
+                  type={'button'}
+                  onClick={() => setTimeToCurrent(setTempEndMinutes, setTempEndSeconds)}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  Now
+                </button>
+              </div>
             </div>
             <button
               type={'button'}
               onClick={() => saveSection()}
-              className="mt-2 p-2 rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
+              className="mt-4 p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
               disabled={isEditing}
             >
               Save Section
             </button>
           </div>
           {sections.length > 0 && (
-            <div className="mt-4">
-              <h2 className="text-lg font-bold">Saved Sections</h2>
+            <div className="mt-5">
+              <hr className="my-2 border-gray-300" />
+              <h2 className="mt-5 text-lg font-bold">Sections</h2>
               {sections.map((section) => (
-                <div key={section.key} className={`mt-2 p-2 flex items-center space-x-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}>
+                <div key={section.key}
+                     className={`py-2 flex items-center space-x-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}>
                   <div>{section.key}: {section.videoId}</div>
                   <div>{section.startMinutes}:{section.startSeconds} - {section.endMinutes}:{section.endSeconds}</div>
                   <div className="ml-auto flex space-x-2">
