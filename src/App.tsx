@@ -171,7 +171,7 @@ function App() {
             />
           </div>
         </div>
-        <div className="m-4 w-full max-w-md">
+        <div className="m-4 px-3 w-full max-w-md">
           <div className="block">
             <label className="text-sm font-bold">
               Video ID
@@ -262,7 +262,7 @@ function App() {
           {sections.length > 0 && (
             <div className="mt-5">
               <hr className="my-2 border-gray-300" />
-              <h2 className="mt-5 text-lg font-bold">Sections</h2>
+              <h2 className="mt-5 text-sm font-bold">Sections</h2>
               {sections.map((section) => (
                 <div key={section.key}
                      className={`py-2 flex items-center space-x-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}>
