@@ -19,6 +19,7 @@ function App() {
   const [tempStartSeconds, setTempStartSeconds] = useState(0);
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
+  const [activeSectionKey, setActiveSectionKey] = useState<number | null>(null);
 
   const updateOpts = useCallback(() => {
     const currentTime = playerRef.current?.getCurrentTime();
@@ -137,6 +138,17 @@ function App() {
     setTempVideoId(section.videoId);
   };
 
+  const toggleSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number, videoId: string, key: number }) => {
+    if (isRepeating && section.videoId === videoId && section.startMinutes === startMinutes && section.startSeconds === startSeconds && section.endMinutes === endMinutes && section.endSeconds === endSeconds) {
+      setIsRepeating(false);
+      setActiveSectionKey(null);
+      playerRef.current?.pauseVideo();
+    } else {
+      setSection(section);
+      setActiveSectionKey(section.key);
+    }
+  };
+
   const deleteSection = (key: number) => {
     localStorage.removeItem(`${key}`);
     setSections((prevSections) => prevSections.filter((section) => section.key !== key));
@@ -249,23 +261,25 @@ function App() {
             <div className="mt-4">
               <h2 className="text-lg font-bold">Saved Sections</h2>
               {sections.map((section) => (
-                <div key={section.key} className="mt-2">
+                <div key={section.key} className={`mt-2 p-2 flex items-center space-x-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}>
                   <div>{section.key}: {section.videoId}</div>
                   <div>{section.startMinutes}:{section.startSeconds} - {section.endMinutes}:{section.endSeconds}</div>
-                  <button
-                    type={'button'}
-                    onClick={() => setSection(section)}
-                    className="mt-2 p-2 rounded bg-blue-500 text-white"
-                  >
-                    Set
-                  </button>
-                  <button
-                    type={'button'}
-                    onClick={() => deleteSection(section.key)}
-                    className="mt-2 p-2 rounded bg-red-500 text-white ml-2"
-                  >
-                    Delete
-                  </button>
+                  <div className="ml-auto flex space-x-2">
+                    <button
+                      type={'button'}
+                      onClick={() => toggleSection(section)}
+                      className="p-2 rounded bg-black text-white"
+                    >
+                      {isRepeating && section.videoId === videoId && section.startMinutes === startMinutes && section.startSeconds === startSeconds && section.endMinutes === endMinutes && section.endSeconds === endSeconds ? 'Stop' : 'Set'}
+                    </button>
+                    <button
+                      type={'button'}
+                      onClick={() => deleteSection(section.key)}
+                      className="p-2 rounded bg-black text-white"
+                    >
+                      Del
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
