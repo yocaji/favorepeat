@@ -1,78 +1,86 @@
-import {useState, useRef, useEffect, useCallback} from 'react'
-import YouTube, {YouTubeProps, YouTubePlayer} from 'react-youtube'
-import * as React from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type * as React from 'react';
+import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
 
 function App() {
-
-  const playerRef = useRef<YouTubePlayer | null>(null)
-  const [startMinutes, setStartMinutes] = useState(2)
-  const [startSeconds, setStartSeconds] = useState(0)
-  const [endMinutes, setEndMinutes] = useState(2)
-  const [endSeconds, setEndSeconds] = useState(5)
-  const [videoId, setVideoId] = useState("SR_DgMTC_ho")
-  const [isEditing, setIsEditing] = useState(false)
-  const [tempVideoId, setTempVideoId] = useState(videoId)
-  const [videoHeight, setVideoHeight] = useState('auto')
-  const [isRepeating, setIsRepeating] = useState(false)
-  const [opts, setOpts] = useState({})
+  const playerRef = useRef<YouTubePlayer | null>(null);
+  const [startMinutes, setStartMinutes] = useState(2);
+  const [startSeconds, setStartSeconds] = useState(0);
+  const [endMinutes, setEndMinutes] = useState(2);
+  const [endSeconds, setEndSeconds] = useState(5);
+  const [videoId, setVideoId] = useState('SR_DgMTC_ho');
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempVideoId, setTempVideoId] = useState(videoId);
+  const [videoHeight, setVideoHeight] = useState('auto');
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [opts, setOpts] = useState({});
 
   const updateOpts = useCallback(() => {
     const currentTime = playerRef.current?.getCurrentTime();
     setOpts({
       playerVars: {
         start: isRepeating ? startMinutes * 60 + startSeconds : currentTime,
-        end: isRepeating ? endMinutes * 60 + endSeconds : undefined
+        end: isRepeating ? endMinutes * 60 + endSeconds : undefined,
       },
       width: '100%',
-      height: parseInt(videoHeight) > 360 ? '360px' : videoHeight
+      height: Number.parseInt(videoHeight) > 360 ? '360px' : videoHeight,
     });
-  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, videoHeight]);
+  }, [
+    isRepeating,
+    startMinutes,
+    startSeconds,
+    endMinutes,
+    endSeconds,
+    videoHeight,
+  ]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
-      const width = window.innerWidth
-      const height = (width * 9) / 16
-      setVideoHeight(`${height}px`)
-    }
+      const width = window.innerWidth;
+      const height = (width * 9) / 16;
+      setVideoHeight(`${height}px`);
+    };
 
-    updateVideoHeight()
-    window.addEventListener('resize', updateVideoHeight)
+    updateVideoHeight();
+    window.addEventListener('resize', updateVideoHeight);
 
     return () => {
-      window.removeEventListener('resize', updateVideoHeight)
-    }
-  }, [])
+      window.removeEventListener('resize', updateVideoHeight);
+    };
+  }, []);
 
   useEffect(() => {
     updateOpts();
-  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, updateOpts]);
+  }, [updateOpts]);
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-    playerRef.current = event.target
-  }
+    playerRef.current = event.target;
+  };
 
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
     if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
       if (isRepeating) {
-        playerRef.current.seekTo(startMinutes * 60 + startSeconds, true).catch((error) => {
-          console.error('Error seeking to start:', error)
-        })
+        playerRef.current
+          .seekTo(startMinutes * 60 + startSeconds, true)
+          .catch((error) => {
+            console.error('Error seeking to start:', error);
+          });
       } else {
         playerRef.current.playVideo().catch((error) => {
-          console.error('Error playing video:', error)
-        })
+          console.error('Error playing video:', error);
+        });
       }
     }
-  }
+  };
 
   const handleSave = () => {
     setVideoId(tempVideoId);
     setIsEditing(false);
-  }
+  };
 
   const setTimeToCurrent = async (
-    setMinutes: React.Dispatch<React.SetStateAction<number>>, 
-    setSeconds: React.Dispatch<React.SetStateAction<number>>
+    setMinutes: React.Dispatch<React.SetStateAction<number>>,
+    setSeconds: React.Dispatch<React.SetStateAction<number>>,
   ): Promise<void> => {
     if (playerRef.current) {
       const currentTime = await playerRef.current.getCurrentTime();
@@ -81,15 +89,20 @@ function App() {
     }
   };
 
-  const setStartTimeToCurrent = () => setTimeToCurrent(setStartMinutes, setStartSeconds);
+  const setStartTimeToCurrent = () =>
+    setTimeToCurrent(setStartMinutes, setStartSeconds);
 
-  const setEndTimeToCurrent = () => setTimeToCurrent(setEndMinutes, setEndSeconds);
+  const setEndTimeToCurrent = () =>
+    setTimeToCurrent(setEndMinutes, setEndSeconds);
 
   return (
     <>
       <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
       <div className="flex flex-col items-center">
-        <div className="w-full relative" style={{paddingBottom: '56.25%', maxWidth: '640px'}}>
+        <div
+          className="w-full relative"
+          style={{ paddingBottom: '56.25%', maxWidth: '640px' }}
+        >
           <div className="absolute top-0 left-0 w-full h-full">
             <YouTube
               videoId={videoId}
@@ -107,11 +120,14 @@ function App() {
                 type="text"
                 value={tempVideoId}
                 onChange={(e) => setTempVideoId(e.target.value)}
-                className={"border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"}
+                className={
+                  'border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500'
+                }
                 disabled={!isEditing}
               />
               <button
-                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                type={'button'}
+                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
                 className="ml-2 p-2 rounded bg-black text-white"
               >
                 {isEditing ? 'Save' : 'Edit'}
@@ -125,10 +141,11 @@ function App() {
                 checked={isRepeating}
                 onChange={(e) => setIsRepeating(e.target.checked)}
                 className="ml-2"
-              /> Repeat
+              />{' '}
+              Repeat
             </label>
           </div>
-          <hr className="my-4 border-gray-300"/>
+          <hr className="my-4 border-gray-300" />
           <div className="flex space-x-2 mt-2">
             <label className="block w-full">
               Start Time:
@@ -147,6 +164,7 @@ function App() {
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
                 />
                 <button
+                  type={'button'}
                   onClick={setStartTimeToCurrent}
                   className="ml-2 p-2 rounded bg-black text-white"
                 >
@@ -173,6 +191,7 @@ function App() {
                   className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
                 />
                 <button
+                  type={'button'}
                   onClick={setEndTimeToCurrent}
                   className="ml-2 p-2 rounded bg-black text-white"
                 >
@@ -184,7 +203,7 @@ function App() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
