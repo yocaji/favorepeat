@@ -14,6 +14,11 @@ function App() {
   const [videoHeight, setVideoHeight] = useState('auto');
   const [isRepeating, setIsRepeating] = useState(false);
   const [opts, setOpts] = useState({});
+  const [sections, setSections] = useState<{ key: number; startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number; videoId: string }[]>([]);
+  const [tempStartMinutes, setTempStartMinutes] = useState(0);
+  const [tempStartSeconds, setTempStartSeconds] = useState(0);
+  const [tempEndMinutes, setTempEndMinutes] = useState(0);
+  const [tempEndSeconds, setTempEndSeconds] = useState(0);
 
   const updateOpts = useCallback(() => {
     const currentTime = playerRef.current?.getCurrentTime();
@@ -53,6 +58,18 @@ function App() {
     updateOpts();
   }, [updateOpts]);
 
+  useEffect(() => {
+    const savedSections = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && !isNaN(Number(key))) {
+        const section = JSON.parse(localStorage.getItem(key) || '{}');
+        savedSections.push({ key: Number(key), ...section });
+      }
+    }
+    setSections(savedSections);
+  }, []);
+
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
   };
@@ -89,11 +106,53 @@ function App() {
     }
   };
 
-  const setStartTimeToCurrent = () =>
-    setTimeToCurrent(setStartMinutes, setStartSeconds);
+  const saveSection = () => {
+    const keys = Object.keys(localStorage).map(Number).filter((key) => !isNaN(key));
+    const maxKey = keys.length > 0 ? Math.max(...keys) : -1;
+    const newKey = maxKey + 1;
+    const section = {
+      startMinutes: tempStartMinutes,
+      startSeconds: tempStartSeconds,
+      endMinutes: tempEndMinutes,
+      endSeconds: tempEndSeconds,
+    };
+    const sectionData = {
+      videoId,
+      startMinutes: section.startMinutes,
+      startSeconds: section.startSeconds,
+      endMinutes: section.endMinutes,
+      endSeconds: section.endSeconds,
+    };
+    localStorage.setItem(`${newKey}`, JSON.stringify(sectionData));
+    console.log(`Section ${newKey + 1} saved:`, sectionData);
 
-  const setEndTimeToCurrent = () =>
-    setTimeToCurrent(setEndMinutes, setEndSeconds);
+    setSections((prevSections) => [...prevSections, { key: newKey, ...section, videoId }]);
+
+    setTempStartMinutes(0);
+    setTempStartSeconds(0);
+    setTempEndMinutes(0);
+    setTempEndSeconds(0);
+  };
+
+  const playSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number }) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(section.startMinutes * 60 + section.startSeconds, true).then(() => {
+        setIsRepeating(true);
+        setStartMinutes(section.startMinutes);
+        setStartSeconds(section.startSeconds);
+        setEndMinutes(section.endMinutes);
+        setEndSeconds(section.endSeconds);
+        playerRef.current?.playVideo();
+      }).catch((error) => {
+        console.error('Error playing section:', error);
+      });
+    }
+  };
+
+  const deleteSection = (key: number) => {
+    localStorage.removeItem(`${key}`);
+    setSections((prevSections) => prevSections.filter((section) => section.key !== key));
+  };
 
   return (
     <>
@@ -134,72 +193,96 @@ function App() {
               </button>
             </div>
           </label>
-          <div className="flex space-x-2 mt-2">
-            <label className="block w-full">
-              <input
-                type="checkbox"
-                checked={isRepeating}
-                onChange={(e) => setIsRepeating(e.target.checked)}
-                className="ml-2"
-              />{' '}
-              Repeat
-            </label>
+          <div className="mt-4">
+            <div className="flex space-x-2">
+              <label className="block w-full">
+                Section Start Time:
+                <div className="flex space-x-2">
+                  <input
+                    type="tel"
+                    value={tempStartMinutes}
+                    onChange={(e) => setTempStartMinutes(Number(e.target.value))}
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <span>:</span>
+                  <input
+                    type="tel"
+                    value={tempStartSeconds}
+                    onChange={(e) => setTempStartSeconds(Number(e.target.value))}
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <button
+                    type={'button'}
+                    onClick={() => setTimeToCurrent(setTempStartMinutes, setTempStartSeconds)}
+                    className="ml-2 p-2 rounded bg-black text-white"
+                  >
+                    Now
+                  </button>
+                </div>
+              </label>
+            </div>
+            <div className="flex space-x-2 mt-2">
+              <label className="block w-full">
+                Section End Time:
+                <div className="flex space-x-2">
+                  <input
+                    type="tel"
+                    value={tempEndMinutes}
+                    onChange={(e) => setTempEndMinutes(Number(e.target.value))}
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <span>:</span>
+                  <input
+                    type="tel"
+                    value={tempEndSeconds}
+                    onChange={(e) => setTempEndSeconds(Number(e.target.value))}
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <button
+                    type={'button'}
+                    onClick={() => setTimeToCurrent(setTempEndMinutes, setTempEndSeconds)}
+                    className="ml-2 p-2 rounded bg-black text-white"
+                  >
+                    Now
+                  </button>
+                </div>
+              </label>
+            </div>
+            <button
+              type={'button'}
+              onClick={() => saveSection()}
+              className="mt-2 p-2 rounded bg-green-500 text-white"
+            >
+              Save Section
+            </button>
           </div>
-          <hr className="my-4 border-gray-300" />
-          <div className="flex space-x-2 mt-2">
-            <label className="block w-full">
-              Start Time:
-              <div className="flex space-x-2">
-                <input
-                  type="tel"
-                  value={startMinutes}
-                  onChange={(e) => setStartMinutes(Number(e.target.value))}
-                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                />
-                <span>:</span>
-                <input
-                  type="tel"
-                  value={startSeconds}
-                  onChange={(e) => setStartSeconds(Number(e.target.value))}
-                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                />
-                <button
-                  type={'button'}
-                  onClick={setStartTimeToCurrent}
-                  className="ml-2 p-2 rounded bg-black text-white"
-                >
-                  Now
-                </button>
-              </div>
-            </label>
-          </div>
-          <div className="flex space-x-2 mt-2">
-            <label className="block w-full">
-              End Time:
-              <div className="flex space-x-2">
-                <input
-                  type="tel"
-                  value={endMinutes}
-                  onChange={(e) => setEndMinutes(Number(e.target.value))}
-                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                />
-                <span>:</span>
-                <input
-                  type="tel"
-                  value={endSeconds}
-                  onChange={(e) => setEndSeconds(Number(e.target.value))}
-                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
-                />
-                <button
-                  type={'button'}
-                  onClick={setEndTimeToCurrent}
-                  className="ml-2 p-2 rounded bg-black text-white"
-                >
-                  Now
-                </button>
-              </div>
-            </label>
-          </div>
+          {sections.length > 0 && (
+            <div className="mt-4">
+              <h2 className="text-lg font-bold">Saved Sections</h2>
+              {sections.map((section) => (
+                <div key={section.key} className="mt-2">
+                  <div>Section {section.key}</div>
+                  <div>Video ID: {section.videoId}</div>
+                  <div>Start Time: {section.startMinutes}:{section.startSeconds}</div>
+                  <div>End Time: {section.endMinutes}:{section.endSeconds}</div>
+                  <button
+                    type={'button'}
+                    onClick={() => playSection(section)}
+                    className="mt-2 p-2 rounded bg-blue-500 text-white"
+                  >
+                    Play
+                  </button>
+                  <button
+                    type={'button'}
+                    onClick={() => deleteSection(section.key)}
+                    className="mt-2 p-2 rounded bg-red-500 text-white ml-2"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
