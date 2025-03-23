@@ -4,11 +4,11 @@ import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
-  const [startMinutes, setStartMinutes] = useState(2);
+  const [startMinutes, setStartMinutes] = useState(0);
   const [startSeconds, setStartSeconds] = useState(0);
-  const [endMinutes, setEndMinutes] = useState(2);
-  const [endSeconds, setEndSeconds] = useState(5);
-  const [videoId, setVideoId] = useState('SR_DgMTC_ho');
+  const [endMinutes, setEndMinutes] = useState(0);
+  const [endSeconds, setEndSeconds] = useState(0);
+  const [videoId, setVideoId] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [tempVideoId, setTempVideoId] = useState(videoId);
   const [videoHeight, setVideoHeight] = useState('auto');
@@ -30,14 +30,7 @@ function App() {
       width: '100%',
       height: Number.parseInt(videoHeight) > 360 ? '360px' : videoHeight,
     });
-  }, [
-    isRepeating,
-    startMinutes,
-    startSeconds,
-    endMinutes,
-    endSeconds,
-    videoHeight,
-  ]);
+  }, [isRepeating, startMinutes, startSeconds, endMinutes, endSeconds, videoHeight]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
@@ -67,6 +60,7 @@ function App() {
         savedSections.push({ key: Number(key), ...section });
       }
     }
+    savedSections.sort((a, b) => a.key - b.key);
     setSections(savedSections);
   }, []);
 
@@ -124,7 +118,6 @@ function App() {
       endSeconds: section.endSeconds,
     };
     localStorage.setItem(`${newKey}`, JSON.stringify(sectionData));
-    console.log(`Section ${newKey + 1} saved:`, sectionData);
 
     setSections((prevSections) => [...prevSections, { key: newKey, ...section, videoId }]);
 
@@ -134,19 +127,14 @@ function App() {
     setTempEndSeconds(0);
   };
 
-  const playSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number }) => {
-    if (playerRef.current) {
-      playerRef.current.seekTo(section.startMinutes * 60 + section.startSeconds, true).then(() => {
-        setIsRepeating(true);
-        setStartMinutes(section.startMinutes);
-        setStartSeconds(section.startSeconds);
-        setEndMinutes(section.endMinutes);
-        setEndSeconds(section.endSeconds);
-        playerRef.current?.playVideo();
-      }).catch((error) => {
-        console.error('Error playing section:', error);
-      });
-    }
+  const setSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number, videoId: string }) => {
+    setIsRepeating(true);
+    setStartMinutes(section.startMinutes);
+    setStartSeconds(section.startSeconds);
+    setEndMinutes(section.endMinutes);
+    setEndSeconds(section.endSeconds);
+    setVideoId(section.videoId);
+    setTempVideoId(section.videoId);
   };
 
   const deleteSection = (key: number) => {
@@ -251,7 +239,8 @@ function App() {
             <button
               type={'button'}
               onClick={() => saveSection()}
-              className="mt-2 p-2 rounded bg-green-500 text-white"
+              className="mt-2 p-2 rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
+              disabled={isEditing}
             >
               Save Section
             </button>
@@ -261,16 +250,14 @@ function App() {
               <h2 className="text-lg font-bold">Saved Sections</h2>
               {sections.map((section) => (
                 <div key={section.key} className="mt-2">
-                  <div>Section {section.key}</div>
-                  <div>Video ID: {section.videoId}</div>
-                  <div>Start Time: {section.startMinutes}:{section.startSeconds}</div>
-                  <div>End Time: {section.endMinutes}:{section.endSeconds}</div>
+                  <div>{section.key}: {section.videoId}</div>
+                  <div>{section.startMinutes}:{section.startSeconds} - {section.endMinutes}:{section.endSeconds}</div>
                   <button
                     type={'button'}
-                    onClick={() => playSection(section)}
+                    onClick={() => setSection(section)}
                     className="mt-2 p-2 rounded bg-blue-500 text-white"
                   >
-                    Play
+                    Set
                   </button>
                   <button
                     type={'button'}
