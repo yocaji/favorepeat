@@ -4,8 +4,10 @@ import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
+  const [startHours, setStartHours] = useState(0);
   const [startMinutes, setStartMinutes] = useState(0);
   const [startSeconds, setStartSeconds] = useState(0);
+  const [endHours, setEndHours] = useState(0);
   const [endMinutes, setEndMinutes] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
   const [videoId, setVideoId] = useState('');
@@ -16,35 +18,45 @@ function App() {
   const [sections, setSections] = useState<
     {
       key: number;
+      startHours: number;
       startMinutes: number;
       startSeconds: number;
+      endHours: number;
       endMinutes: number;
       endSeconds: number;
       videoId: string;
       note: string;
     }[]
   >([]);
+  const [tempStartHours, setTempStartHours] = useState(0);
   const [tempStartMinutes, setTempStartMinutes] = useState(0);
   const [tempStartSeconds, setTempStartSeconds] = useState(0);
+  const [tempEndHours, setTempEndHours] = useState(0);
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
   const [activeSectionKey, setActiveSectionKey] = useState<number | null>(null);
   const [note, setNote] = useState('');
 
+  const formatSeconds = (seconds: number) => {
+    return seconds.toString().padStart(2, '0');
+  };
+
   const updateOpts = useCallback(() => {
     const currentTime = playerRef.current?.getCurrentTime();
     setOpts({
       playerVars: {
-        start: isRepeating ? startMinutes * 60 + startSeconds : currentTime,
-        end: isRepeating ? endMinutes * 60 + endSeconds : undefined,
+        start: isRepeating ? startHours * 3600 + startMinutes * 60 + startSeconds : currentTime,
+        end: isRepeating ? endHours * 3600 + endMinutes * 60 + endSeconds : undefined,
       },
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
     });
   }, [
     isRepeating,
+    startHours,
     startMinutes,
     startSeconds,
+    endHours,
     endMinutes,
     endSeconds,
     videoHeight,
@@ -111,8 +123,10 @@ function App() {
     setActiveSectionKey(null);
     setVideoId('');
     setTempVideoId('');
+    setStartHours(0);
     setStartMinutes(0);
     setStartSeconds(0);
+    setEndHours(0);
     setEndMinutes(0);
     setEndSeconds(0);
     setTempStartMinutes(0);
@@ -123,28 +137,34 @@ function App() {
   };
 
   const setTimeToCurrent = async (
+    setHours: React.Dispatch<React.SetStateAction<number>>,
     setMinutes: React.Dispatch<React.SetStateAction<number>>,
     setSeconds: React.Dispatch<React.SetStateAction<number>>,
   ): Promise<void> => {
     if (playerRef.current) {
       const currentTime = await playerRef.current.getCurrentTime();
-      setMinutes(Math.floor(currentTime / 60));
+      setHours(Math.floor(currentTime / 3600));
+      setMinutes(Math.floor((currentTime % 3600) / 60));
       setSeconds(Math.floor(currentTime % 60));
     }
   };
 
   const saveSection = () => {
     const section = {
+      startHours: tempStartHours,
       startMinutes: tempStartMinutes,
       startSeconds: tempStartSeconds,
+      endHours: tempEndHours,
       endMinutes: tempEndMinutes,
       endSeconds: tempEndSeconds,
       note: note,
     };
     const sectionData = {
       videoId,
+      startHours: section.startHours,
       startMinutes: section.startMinutes,
       startSeconds: section.startSeconds,
+      endHours: section.endHours,
       endMinutes: section.endMinutes,
       endSeconds: section.endSeconds,
       note: section.note,
@@ -173,15 +193,19 @@ function App() {
   };
 
   const setSection = (section: {
+    startHours: number;
     startMinutes: number;
     startSeconds: number;
+    endHours: number;
     endMinutes: number;
     endSeconds: number;
     videoId: string;
   }) => {
     setIsRepeating(true);
+    setStartHours(section.startHours);
     setStartMinutes(section.startMinutes);
     setStartSeconds(section.startSeconds);
+    setEndHours(section.endHours);
     setEndMinutes(section.endMinutes);
     setEndSeconds(section.endSeconds);
     setVideoId(section.videoId);
@@ -189,8 +213,10 @@ function App() {
   };
 
   const loadSection = (section: {
+    startHours: number;
     startMinutes: number;
     startSeconds: number;
+    endHours: number;
     endMinutes: number;
     endSeconds: number;
     videoId: string;
@@ -199,8 +225,10 @@ function App() {
   }) => {
     setSection(section);
     setActiveSectionKey(section.key);
+    setTempStartHours(section.startHours);
     setTempStartMinutes(section.startMinutes);
     setTempStartSeconds(section.startSeconds);
+    setTempEndHours(section.endHours);
     setTempEndMinutes(section.endMinutes);
     setTempEndSeconds(section.endSeconds);
     setNote(section.note);
@@ -210,8 +238,10 @@ function App() {
     setIsRepeating(false);
     setActiveSectionKey(null);
     playerRef.current?.pauseVideo();
+    setTempStartHours(0);
     setTempStartMinutes(0);
     setTempStartSeconds(0);
+    setTempEndHours(0);
     setTempEndMinutes(0);
     setTempEndSeconds(0);
     setNote('');
@@ -271,13 +301,26 @@ function App() {
               <div className="block">
                 <span className="text-sm font-bold">Start from</span>
                 <div className="flex items-center">
+                  <label htmlFor="startHours" className="sr-only">
+                    Start Hours
+                  </label>
+                  <input
+                    id="startHours"
+                    type="tel"
+                    value={tempStartHours}
+                    onChange={(e) =>
+                      setTempStartHours(Number(e.target.value))
+                    }
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <span className="mx-1">:</span>
                   <label htmlFor="startMinutes" className="sr-only">
                     Start Minutes
                   </label>
                   <input
                     id="startMinutes"
                     type="tel"
-                    value={tempStartMinutes}
+                    value={formatSeconds(tempStartMinutes)}
                     onChange={(e) =>
                       setTempStartMinutes(Number(e.target.value))
                     }
@@ -290,7 +333,7 @@ function App() {
                   <input
                     id="startSeconds"
                     type="tel"
-                    value={tempStartSeconds}
+                    value={formatSeconds(tempStartSeconds)}
                     onChange={(e) =>
                       setTempStartSeconds(Number(e.target.value))
                     }
@@ -299,7 +342,7 @@ function App() {
                   <button
                     type={'button'}
                     onClick={() =>
-                      setTimeToCurrent(setTempStartMinutes, setTempStartSeconds)
+                      setTimeToCurrent(setTempStartHours, setTempStartMinutes, setTempStartSeconds)
                     }
                     className="ml-2 p-2 rounded bg-black text-white"
                   >
@@ -310,13 +353,24 @@ function App() {
               <div className="block mt-2">
                 <span className="text-sm font-bold">End at</span>
                 <div className="flex items-center">
+                  <label htmlFor="endHours" className="sr-only">
+                    End Hours
+                  </label>
+                  <input
+                    id="endHours"
+                    type="tel"
+                    value={tempEndHours}
+                    onChange={(e) => setTempEndHours(Number(e.target.value))}
+                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  />
+                  <span className="mx-1">:</span>
                   <label htmlFor="endMinutes" className="sr-only">
                     End Minutes
                   </label>
                   <input
                     id="endMinutes"
                     type="tel"
-                    value={tempEndMinutes}
+                    value={formatSeconds(tempEndMinutes)}
                     onChange={(e) => setTempEndMinutes(Number(e.target.value))}
                     className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
                   />
@@ -327,14 +381,14 @@ function App() {
                   <input
                     id="endSeconds"
                     type="tel"
-                    value={tempEndSeconds}
+                    value={formatSeconds(tempEndSeconds)}
                     onChange={(e) => setTempEndSeconds(Number(e.target.value))}
                     className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
                   />
                   <button
                     type={'button'}
                     onClick={() =>
-                      setTimeToCurrent(setTempEndMinutes, setTempEndSeconds)
+                      setTimeToCurrent(setTempEndHours, setTempEndMinutes, setTempEndSeconds)
                     }
                     className="ml-2 p-2 rounded bg-black text-white"
                   >
@@ -375,25 +429,23 @@ function App() {
               {sections.map((section) => (
                 <div
                   key={section.key}
-                  className={`py-2 flex flex-col space-y-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}
+                  className={`py-2 flex flex-col ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}
                 >
                   <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="section"
+                      checked={activeSectionKey === section.key}
+                      onChange={() => loadSection(section)}
+                      className="p-2 rounded bg-black text-white"
+                    />
                     <div>
-                      {section.key}: {section.videoId}
+                      {section.videoId}
                     </div>
                     <div>
-                      {section.startMinutes}:{section.startSeconds} -{' '}
-                      {section.endMinutes}:{section.endSeconds}
+                      {section.startHours}:{formatSeconds(section.startMinutes)}:{formatSeconds(section.startSeconds)} - {section.endHours}:{formatSeconds(section.endMinutes)}:{formatSeconds(section.endSeconds)}
                     </div>
-                    <div>Note: {section.note}</div>
                     <div className="ml-auto flex space-x-2">
-                      <button
-                        type={'button'}
-                        onClick={() => loadSection(section)}
-                        className="p-2 rounded bg-black text-white"
-                      >
-                        Set
-                      </button>
                       <button
                         type={'button'}
                         onClick={() => deleteSection(section.key)}
@@ -403,6 +455,11 @@ function App() {
                       </button>
                     </div>
                   </div>
+                  {section.note && (
+                    <div className="pl-6">
+                      {section.note}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
