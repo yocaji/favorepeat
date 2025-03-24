@@ -21,6 +21,7 @@ function App() {
       endMinutes: number;
       endSeconds: number;
       videoId: string;
+      note: string;
     }[]
   >([]);
   const [tempStartMinutes, setTempStartMinutes] = useState(0);
@@ -28,6 +29,7 @@ function App() {
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
   const [activeSectionKey, setActiveSectionKey] = useState<number | null>(null);
+  const [note, setNote] = useState('');
 
   const updateOpts = useCallback(() => {
     const currentTime = playerRef.current?.getCurrentTime();
@@ -117,6 +119,7 @@ function App() {
     setTempStartSeconds(0);
     setTempEndMinutes(0);
     setTempEndSeconds(0);
+    setNote('');
   };
 
   const setTimeToCurrent = async (
@@ -136,6 +139,7 @@ function App() {
       startSeconds: tempStartSeconds,
       endMinutes: tempEndMinutes,
       endSeconds: tempEndSeconds,
+      note: note,
     };
     const sectionData = {
       videoId,
@@ -143,6 +147,7 @@ function App() {
       startSeconds: section.startSeconds,
       endMinutes: section.endMinutes,
       endSeconds: section.endSeconds,
+      note: section.note,
     };
 
     if (activeSectionKey === null) {
@@ -190,6 +195,7 @@ function App() {
     endSeconds: number;
     videoId: string;
     key: number;
+    note: string;
   }) => {
     setSection(section);
     setActiveSectionKey(section.key);
@@ -197,6 +203,7 @@ function App() {
     setTempStartSeconds(section.startSeconds);
     setTempEndMinutes(section.endMinutes);
     setTempEndSeconds(section.endSeconds);
+    setNote(section.note);
   };
 
   const clearSection = () => {
@@ -207,6 +214,7 @@ function App() {
     setTempStartSeconds(0);
     setTempEndMinutes(0);
     setTempEndSeconds(0);
+    setNote('');
   };
 
   const deleteSection = (key: number) => {
@@ -334,6 +342,14 @@ function App() {
                   </button>
                 </div>
               </div>
+              <div className="block mt-2">
+                <span className="text-sm font-bold">Note</span>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                />
+              </div>
               <div className="flex space-x-2 mt-4">
                 <button
                   type={'button'}
@@ -359,30 +375,33 @@ function App() {
               {sections.map((section) => (
                 <div
                   key={section.key}
-                  className={`py-2 flex items-center space-x-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}
+                  className={`py-2 flex flex-col space-y-2 ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}
                 >
-                  <div>
-                    {section.key}: {section.videoId}
-                  </div>
-                  <div>
-                    {section.startMinutes}:{section.startSeconds} -{' '}
-                    {section.endMinutes}:{section.endSeconds}
-                  </div>
-                  <div className="ml-auto flex space-x-2">
-                    <button
-                      type={'button'}
-                      onClick={() => loadSection(section)}
-                      className="p-2 rounded bg-black text-white"
-                    >
-                      Set
-                    </button>
-                    <button
-                      type={'button'}
-                      onClick={() => deleteSection(section.key)}
-                      className="p-2 rounded bg-black text-white"
-                    >
-                      Del
-                    </button>
+                  <div className="flex items-center space-x-2">
+                    <div>
+                      {section.key}: {section.videoId}
+                    </div>
+                    <div>
+                      {section.startMinutes}:{section.startSeconds} -{' '}
+                      {section.endMinutes}:{section.endSeconds}
+                    </div>
+                    <div>Note: {section.note}</div>
+                    <div className="ml-auto flex space-x-2">
+                      <button
+                        type={'button'}
+                        onClick={() => loadSection(section)}
+                        className="p-2 rounded bg-black text-white"
+                      >
+                        Set
+                      </button>
+                      <button
+                        type={'button'}
+                        onClick={() => deleteSection(section.key)}
+                        className="p-2 rounded bg-black text-white"
+                      >
+                        Del
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
