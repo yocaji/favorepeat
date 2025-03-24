@@ -45,8 +45,12 @@ function App() {
     const currentTime = playerRef.current?.getCurrentTime();
     setOpts({
       playerVars: {
-        start: isRepeating ? startHours * 3600 + startMinutes * 60 + startSeconds : currentTime,
-        end: isRepeating ? endHours * 3600 + endMinutes * 60 + endSeconds : undefined,
+        start: isRepeating
+          ? startHours * 3600 + startMinutes * 60 + startSeconds
+          : currentTime,
+        end: isRepeating
+          ? endHours * 3600 + endMinutes * 60 + endSeconds
+          : undefined,
       },
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
@@ -102,7 +106,7 @@ function App() {
     if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
       if (isRepeating) {
         playerRef.current
-          .seekTo(startMinutes * 60 + startSeconds, true)
+          .seekTo(startHours * 3600 + startMinutes * 60 + startSeconds, true)
           .catch((error) => {
             console.error('Error seeking to start:', error);
           });
@@ -308,9 +312,7 @@ function App() {
                     id="startHours"
                     type="tel"
                     value={tempStartHours}
-                    onChange={(e) =>
-                      setTempStartHours(Number(e.target.value))
-                    }
+                    onChange={(e) => setTempStartHours(Number(e.target.value))}
                     className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
                   />
                   <span className="mx-1">:</span>
@@ -342,7 +344,11 @@ function App() {
                   <button
                     type={'button'}
                     onClick={() =>
-                      setTimeToCurrent(setTempStartHours, setTempStartMinutes, setTempStartSeconds)
+                      setTimeToCurrent(
+                        setTempStartHours,
+                        setTempStartMinutes,
+                        setTempStartSeconds,
+                      )
                     }
                     className="ml-2 p-2 rounded bg-black text-white"
                   >
@@ -388,7 +394,11 @@ function App() {
                   <button
                     type={'button'}
                     onClick={() =>
-                      setTimeToCurrent(setTempEndHours, setTempEndMinutes, setTempEndSeconds)
+                      setTimeToCurrent(
+                        setTempEndHours,
+                        setTempEndMinutes,
+                        setTempEndSeconds,
+                      )
                     }
                     className="ml-2 p-2 rounded bg-black text-white"
                   >
@@ -440,7 +450,11 @@ function App() {
                   />
                   <div className="flex-1 overflow-hidden mx-2">
                     <div>
-                      {section.videoId} - {section.startHours}:{formatSeconds(section.startMinutes)}:{formatSeconds(section.startSeconds)} - {section.endHours}:{formatSeconds(section.endMinutes)}:{formatSeconds(section.endSeconds)}
+                      {section.videoId} - {section.startHours}:
+                      {formatSeconds(section.startMinutes)}:
+                      {formatSeconds(section.startSeconds)} - {section.endHours}
+                      :{formatSeconds(section.endMinutes)}:
+                      {formatSeconds(section.endSeconds)}
                     </div>
                     {section.note && (
                       <div className="mt-1 text-sm text-gray-600 truncate">
