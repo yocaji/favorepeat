@@ -9,7 +9,6 @@ function App() {
   const [endMinutes, setEndMinutes] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
   const [videoId, setVideoId] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [tempVideoId, setTempVideoId] = useState(videoId);
   const [videoHeight, setVideoHeight] = useState('auto');
   const [isRepeating, setIsRepeating] = useState(false);
@@ -85,9 +84,8 @@ function App() {
     }
   };
 
-  const handleSave = () => {
+  const handleLoadVideo = () => {
     setVideoId(tempVideoId);
-    setIsEditing(false);
   };
 
   const setTimeToCurrent = async (
@@ -138,15 +136,23 @@ function App() {
     setTempVideoId(section.videoId);
   };
 
-  const toggleSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number, videoId: string, key: number }) => {
-    if (isRepeating && section.videoId === videoId && section.startMinutes === startMinutes && section.startSeconds === startSeconds && section.endMinutes === endMinutes && section.endSeconds === endSeconds) {
-      setIsRepeating(false);
-      setActiveSectionKey(null);
-      playerRef.current?.pauseVideo();
-    } else {
-      setSection(section);
-      setActiveSectionKey(section.key);
-    }
+  const loadSection = (section: { startMinutes: number; startSeconds: number; endMinutes: number; endSeconds: number, videoId: string, key: number }) => {
+    setSection(section);
+    setActiveSectionKey(section.key);
+    setTempStartMinutes(section.startMinutes);
+    setTempStartSeconds(section.startSeconds);
+    setTempEndMinutes(section.endMinutes);
+    setTempEndSeconds(section.endSeconds);
+  };
+
+  const clearSection = () => {
+    setIsRepeating(false);
+    setActiveSectionKey(null);
+    playerRef.current?.pauseVideo();
+    setTempStartMinutes(0);
+    setTempStartSeconds(0);
+    setTempEndMinutes(0);
+    setTempEndSeconds(0);
   };
 
   const deleteSection = (key: number) => {
@@ -184,15 +190,17 @@ function App() {
                 className={
                   'border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500'
                 }
-                disabled={!isEditing}
+                disabled={isRepeating}
               />
-              <button
-                type={'button'}
-                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-                className="ml-2 p-2 rounded bg-black text-white"
-              >
-                {isEditing ? 'Save' : 'Edit'}
-              </button>
+              {!isRepeating && (
+                <button
+                  type={'button'}
+                  onClick={handleLoadVideo}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  Load video
+                </button>
+              )}
             </div>
           </div>
           <div className="mt-2">
@@ -250,14 +258,22 @@ function App() {
                 </button>
               </div>
             </div>
-            <button
-              type={'button'}
-              onClick={() => saveSection()}
-              className="mt-4 p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
-              disabled={isEditing}
-            >
-              Save Section
-            </button>
+            <div className="flex space-x-2 mt-4">
+              <button
+                type={'button'}
+                onClick={() => saveSection()}
+                className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
+              >
+                Save Section
+              </button>
+              <button
+                type={'button'}
+                onClick={() => clearSection()}
+                className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
+              >
+                Clear
+              </button>
+            </div>
           </div>
           {sections.length > 0 && (
             <div className="mt-5">
@@ -271,10 +287,10 @@ function App() {
                   <div className="ml-auto flex space-x-2">
                     <button
                       type={'button'}
-                      onClick={() => toggleSection(section)}
+                      onClick={() => loadSection(section)}
                       className="p-2 rounded bg-black text-white"
                     >
-                      {isRepeating && section.videoId === videoId && section.startMinutes === startMinutes && section.startSeconds === startSeconds && section.endMinutes === endMinutes && section.endSeconds === endSeconds ? 'Stop' : 'Set'}
+                      Load
                     </button>
                     <button
                       type={'button'}
