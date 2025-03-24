@@ -429,37 +429,35 @@ function App() {
               {sections.map((section) => (
                 <div
                   key={section.key}
-                  className={`py-2 flex flex-col ${activeSectionKey === section.key ? 'bg-gray-200' : ''}`}
+                  className={`p-2 flex items-center rounded ${activeSectionKey === section.key ? 'bg-gray-100' : ''}`}
+                  onClick={() => loadSection(section)}
                 >
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="section"
-                      checked={activeSectionKey === section.key}
-                      onChange={() => loadSection(section)}
-                      className="p-2 rounded bg-black text-white"
-                    />
+                  <input
+                    type="radio"
+                    name="section"
+                    checked={activeSectionKey === section.key}
+                    onChange={() => loadSection(section)}
+                  />
+                  <div className="flex-1 overflow-hidden mx-2">
                     <div>
-                      {section.videoId}
+                      {section.videoId} - {section.startHours}:{formatSeconds(section.startMinutes)}:{formatSeconds(section.startSeconds)} - {section.endHours}:{formatSeconds(section.endMinutes)}:{formatSeconds(section.endSeconds)}
                     </div>
-                    <div>
-                      {section.startHours}:{formatSeconds(section.startMinutes)}:{formatSeconds(section.startSeconds)} - {section.endHours}:{formatSeconds(section.endMinutes)}:{formatSeconds(section.endSeconds)}
-                    </div>
-                    <div className="ml-auto flex space-x-2">
-                      <button
-                        type={'button'}
-                        onClick={() => deleteSection(section.key)}
-                        className="p-2 rounded bg-black text-white"
-                      >
-                        Del
-                      </button>
-                    </div>
+                    {section.note && (
+                      <div className="mt-1 text-sm text-gray-600 truncate">
+                        {section.note}
+                      </div>
+                    )}
                   </div>
-                  {section.note && (
-                    <div className="pl-6">
-                      {section.note}
-                    </div>
-                  )}
+                  <button
+                    type={'button'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteSection(section.key);
+                    }}
+                    className="p-2 rounded bg-black text-white"
+                  >
+                    Del
+                  </button>
                 </div>
               ))}
             </div>
