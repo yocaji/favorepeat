@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
+import { FaRegTrashAlt } from "react-icons/fa";
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -468,9 +469,10 @@ function App() {
                       e.stopPropagation();
                       deleteSection(section.key);
                     }}
-                    className="p-2 rounded bg-black text-white"
+                    className="p-2 border rounded border-gray-300 bg-white"
                   >
-                    Del
+                    <span className="sr-only">Delete</span>
+                    <FaRegTrashAlt />
                   </button>
                 </div>
               ))}
