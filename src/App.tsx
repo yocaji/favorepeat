@@ -27,6 +27,7 @@ function App() {
       endSeconds: number;
       videoId: string;
       note: string;
+      videoTitle: string;
     }[]
   >([]);
   const [tempStartHours, setTempStartHours] = useState(0);
@@ -37,6 +38,7 @@ function App() {
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
   const [activeSectionKey, setActiveSectionKey] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
 
   const formatSeconds = (seconds: number) => {
     return seconds.toString().padStart(2, '0');
@@ -119,7 +121,25 @@ function App() {
     }
   };
 
-  const handleLoadVideo = () => {
+  const fetchVideoTitle = async (videoId: string) => {
+    try {
+      const apiKey = import.meta.env.VITE_REACT_APP_YOUTUBE_API_KEY;
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`
+      );
+      const data = await response.json();
+      if (data.items.length > 0) {
+        console.log('Video title:', data.items[0].snippet.title);
+        return data.items[0].snippet.title;
+      }
+    } catch (error) {
+      console.error('Error fetching video title:', error);
+    }
+  };
+
+  const handleLoadVideo = async () => {
+    const title = await fetchVideoTitle(tempVideoId);
+    setVideoTitle(title);
     setVideoId(tempVideoId);
   };
 
@@ -154,7 +174,7 @@ function App() {
     }
   };
 
-  const saveSection = () => {
+  const saveSection = async () => {
     const section = {
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
@@ -166,6 +186,7 @@ function App() {
     };
     const sectionData = {
       videoId,
+      videoTitle,
       startHours: section.startHours,
       startMinutes: section.startMinutes,
       startSeconds: section.startSeconds,
@@ -182,7 +203,7 @@ function App() {
       const maxKey = keys.length > 0 ? Math.max(...keys) : -1;
       const newKey = maxKey + 1;
       localStorage.setItem(`${newKey}`, JSON.stringify(sectionData));
-      const newSection = { key: newKey, ...section, videoId };
+      const newSection = { key: newKey, ...section, videoId, videoTitle };
       setSections((prevSections) => [...prevSections, newSection]);
       loadSection(newSection);
     } else {
@@ -190,7 +211,7 @@ function App() {
       setSections((prevSections) =>
         prevSections.map((sec) =>
           sec.key === activeSectionKey
-            ? { key: activeSectionKey, ...section, videoId }
+            ? { key: activeSectionKey, ...section, videoId, videoTitle }
             : sec,
         ),
       );
@@ -227,6 +248,7 @@ function App() {
     videoId: string;
     key: number;
     note: string;
+    videoTitle: string;
   }) => {
     setSection(section);
     setActiveSectionKey(section.key);
@@ -237,6 +259,7 @@ function App() {
     setTempEndMinutes(section.endMinutes);
     setTempEndSeconds(section.endSeconds);
     setNote(section.note);
+    setVideoTitle(section.videoTitle);
   };
 
   const clearSection = () => {
@@ -452,13 +475,14 @@ function App() {
                     onChange={() => loadSection(section)}
                   />
                   <div className="flex-1 overflow-hidden mx-2">
-                    <div>
-                      {section.videoId} - {section.startHours}:
-                      {formatSeconds(section.startMinutes)}:
-                      {formatSeconds(section.startSeconds)} - {section.endHours}
-                      :{formatSeconds(section.endMinutes)}:
-                      {formatSeconds(section.endSeconds)}
-                    </div>
+                      <div className="text-xs truncate">{section.videoTitle}</div>
+                      <div className="text-xs text-gray-500">
+                        {section.startHours}:
+                        {formatSeconds(section.startMinutes)}:
+                        {formatSeconds(section.startSeconds)}-{section.endHours}
+                        :{formatSeconds(section.endMinutes)}:
+                        {formatSeconds(section.endSeconds)}
+                      </div>
                     {section.note && (
                       <div className="mt-1 text-sm text-gray-600 truncate">
                         {section.note}
