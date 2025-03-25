@@ -48,6 +48,7 @@ function App() {
     const currentTime = playerRef.current?.getCurrentTime();
     setOpts({
       playerVars: {
+        autoplay: 1,
         start: isRepeating
           ? startHours * 3600 + startMinutes * 60 + startSeconds
           : currentTime,
@@ -129,7 +130,6 @@ function App() {
       );
       const data = await response.json();
       if (data.items.length > 0) {
-        console.log('Video title:', data.items[0].snippet.title);
         return data.items[0].snippet.title;
       }
     } catch (error) {
