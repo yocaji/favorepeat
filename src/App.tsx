@@ -253,10 +253,12 @@ function App() {
   };
 
   const deleteSection = (key: number) => {
-    localStorage.removeItem(`${key}`);
-    setSections((prevSections) =>
-      prevSections.filter((section) => section.key !== key),
-    );
+    if (window.confirm('Delete this section?')) {
+      localStorage.removeItem(`${key}`);
+      setSections((prevSections) =>
+        prevSections.filter((section) => section.key !== key),
+      );
+    }
   };
 
   return (
