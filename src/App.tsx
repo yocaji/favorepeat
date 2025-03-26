@@ -12,22 +12,19 @@ function App() {
   const [endMinutes, setEndMinutes] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
   const [videoId, setVideoId] = useState('');
-  const [tempVideoId, setTempVideoId] = useState(videoId);
+  const [tempVideoId, setTempVideoId] = useState('');
   const [videoHeight, setVideoHeight] = useState('auto');
   const [isRepeating, setIsRepeating] = useState(false);
   const [opts, setOpts] = useState({});
   const [sections, setSections] = useState<
     {
-      key: number;
       startHours: number;
       startMinutes: number;
       startSeconds: number;
       endHours: number;
       endMinutes: number;
       endSeconds: number;
-      videoId: string;
       note: string;
-      videoTitle: string;
     }[]
   >([]);
   const [tempStartHours, setTempStartHours] = useState(0);
@@ -36,7 +33,7 @@ function App() {
   const [tempEndHours, setTempEndHours] = useState(0);
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
-  const [activeSectionKey, setActiveSectionKey] = useState<number | null>(null);
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
 
@@ -90,17 +87,10 @@ function App() {
   }, [updateOpts]);
 
   useEffect(() => {
-    const savedSections = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && !Number.isNaN(Number(key))) {
-        const section = JSON.parse(localStorage.getItem(key) || '{}');
-        savedSections.push({ key: Number(key), ...section });
-      }
-    }
-    savedSections.sort((a, b) => a.key - b.key);
-    setSections(savedSections);
-  }, []);
+    const data = JSON.parse(localStorage.getItem(videoId) || '{}');
+    const localSections = data.sections || [];
+    setSections(localSections);
+  }, [videoId]);
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -138,14 +128,19 @@ function App() {
   };
 
   const handleLoadVideo = async () => {
-    const title = await fetchVideoTitle(tempVideoId);
-    setVideoTitle(title);
-    setVideoId(tempVideoId);
+    const existingData = JSON.parse(localStorage.getItem(tempVideoId) || '{}');
+    console.log('existingData', existingData);
+    if (existingData.sections) {
+      setSections(existingData.sections);
+      setVideoId(tempVideoId);
+    } else {
+      setVideoId(tempVideoId);
+    }
   };
 
   const handleClearVideo = () => {
     setIsRepeating(false);
-    setActiveSectionKey(null);
+    setActiveSectionIndex(null);
     setVideoId('');
     setTempVideoId('');
     setStartHours(0);
@@ -175,6 +170,11 @@ function App() {
   };
 
   const saveSection = async () => {
+    if (!videoTitle) {
+      const title = await fetchVideoTitle(tempVideoId);
+      setVideoTitle(title);
+    }
+
     const section = {
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
@@ -185,8 +185,6 @@ function App() {
       note: note,
     };
     const sectionData = {
-      videoId,
-      videoTitle,
       startHours: section.startHours,
       startMinutes: section.startMinutes,
       startSeconds: section.startSeconds,
@@ -196,25 +194,24 @@ function App() {
       note: section.note,
     };
 
-    if (activeSectionKey === null) {
-      const keys = Object.keys(localStorage)
-        .map(Number)
-        .filter((key) => !Number.isNaN(key));
-      const maxKey = keys.length > 0 ? Math.max(...keys) : -1;
-      const newKey = maxKey + 1;
-      localStorage.setItem(`${newKey}`, JSON.stringify(sectionData));
-      const newSection = { key: newKey, ...section, videoId, videoTitle };
-      setSections((prevSections) => [...prevSections, newSection]);
-      loadSection(newSection);
+    const existingData = JSON.parse(localStorage.getItem(videoId) || '{}');
+    const existingSections = existingData.sections || [];
+    if (activeSectionIndex === null) {
+      existingSections.push(sectionData);
     } else {
-      localStorage.setItem(`${activeSectionKey}`, JSON.stringify(sectionData));
-      setSections((prevSections) =>
-        prevSections.map((sec) =>
-          sec.key === activeSectionKey
-            ? { key: activeSectionKey, ...section, videoId, videoTitle }
-            : sec,
-        ),
-      );
+      if (activeSectionIndex !== -1) {
+        existingSections[activeSectionIndex] = sectionData;
+      }
+    }
+    localStorage.setItem(videoId, JSON.stringify({ sections: existingSections }));
+    setSections(existingSections);
+    seekSection(existingSections[existingSections.length - 1], existingSections.length - 1);
+
+    const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
+    const videoEntry = { videoId, videoTitle: videoTitle || existingData.videoTitle };
+    if (!existingVideos.some((video: { videoId: string }) => video.videoId === videoId)) {
+      existingVideos.push(videoEntry);
+      localStorage.setItem('videos', JSON.stringify(existingVideos));
     }
   };
 
@@ -225,7 +222,6 @@ function App() {
     endHours: number;
     endMinutes: number;
     endSeconds: number;
-    videoId: string;
   }) => {
     setIsRepeating(true);
     setStartHours(section.startHours);
@@ -234,24 +230,19 @@ function App() {
     setEndHours(section.endHours);
     setEndMinutes(section.endMinutes);
     setEndSeconds(section.endSeconds);
-    setVideoId(section.videoId);
-    setTempVideoId(section.videoId);
   };
 
-  const loadSection = (section: {
+  const seekSection = (section: {
     startHours: number;
     startMinutes: number;
     startSeconds: number;
     endHours: number;
     endMinutes: number;
     endSeconds: number;
-    videoId: string;
-    key: number;
     note: string;
-    videoTitle: string;
-  }) => {
+  }, index: number) => {
     setSection(section);
-    setActiveSectionKey(section.key);
+    setActiveSectionIndex(index);
     setTempStartHours(section.startHours);
     setTempStartMinutes(section.startMinutes);
     setTempStartSeconds(section.startSeconds);
@@ -259,13 +250,11 @@ function App() {
     setTempEndMinutes(section.endMinutes);
     setTempEndSeconds(section.endSeconds);
     setNote(section.note);
-    setVideoTitle(section.videoTitle);
   };
 
   const clearSection = () => {
     setIsRepeating(false);
-    setActiveSectionKey(null);
-    playerRef.current?.pauseVideo();
+    setActiveSectionIndex(null);
     setTempStartHours(0);
     setTempStartMinutes(0);
     setTempStartSeconds(0);
@@ -275,11 +264,13 @@ function App() {
     setNote('');
   };
 
-  const deleteSection = (key: number) => {
+  const deleteSection = (index: number) => {
     if (window.confirm('Delete this section?')) {
-      localStorage.removeItem(`${key}`);
-      setSections((prevSections) =>
-        prevSections.filter((section) => section.key !== key),
+      const existingSections = JSON.parse(localStorage.getItem(videoId) || '[]');
+      existingSections.splice(index, 1);
+      localStorage.setItem(videoId, JSON.stringify(existingSections));
+      setSections(() =>
+        existingSections.splice(index, 1)
       );
     }
   };
@@ -458,24 +449,24 @@ function App() {
               </div>
             </div>
           )}
-          {sections.length > 0 && (
+          {videoId && sections.length > 0 && (
             <div className="mt-5">
               <hr className="my-2 border-gray-300" />
               <h2 className="mt-5 text-sm font-bold">Sections</h2>
-              {sections.map((section) => (
+              {sections.map((section, index) => (
                 <div
-                  key={section.key}
-                  className={`p-2 flex items-center rounded ${activeSectionKey === section.key ? 'bg-gray-100' : ''}`}
-                  onClick={() => loadSection(section)}
+                  key={index}
+                  className={`p-2 flex items-center rounded ${activeSectionIndex === index ? 'bg-gray-100' : ''}`}
+                  onClick={() => seekSection(section, index)}
                 >
                   <input
                     type="radio"
                     name="section"
-                    checked={activeSectionKey === section.key}
-                    onChange={() => loadSection(section)}
+                    checked={activeSectionIndex === index}
+                    onChange={() => seekSection(section, index)}
                   />
                   <div className="flex-1 overflow-hidden mx-2">
-                      <div className="text-xs truncate">{section.videoTitle}</div>
+                      <div className="text-xs truncate">{videoTitle}</div>
                       <div className="text-xs text-gray-500">
                         {section.startHours}:
                         {formatSeconds(section.startMinutes)}:
@@ -493,7 +484,7 @@ function App() {
                     type={'button'}
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteSection(section.key);
+                      deleteSection(index);
                     }}
                     className="p-2 border rounded border-gray-300 bg-white"
                   >
