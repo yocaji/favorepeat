@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
+import { FaRegTrashAlt } from 'react-icons/fa';
+import { GoVideo } from 'react-icons/go';
 import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
-import { FaRegTrashAlt } from "react-icons/fa";
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -16,6 +17,9 @@ function App() {
   const [videoHeight, setVideoHeight] = useState('auto');
   const [isRepeating, setIsRepeating] = useState(false);
   const [opts, setOpts] = useState({});
+  const [videos, setVideos] = useState<
+    { videoId: string; videoTitle: string }[]
+  >([]);
   const [sections, setSections] = useState<
     {
       startHours: number;
@@ -33,7 +37,9 @@ function App() {
   const [tempEndHours, setTempEndHours] = useState(0);
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
-  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(
+    null,
+  );
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
 
@@ -87,9 +93,13 @@ function App() {
   }, [updateOpts]);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem(videoId) || '{}');
-    const localSections = data.sections || [];
-    setSections(localSections);
+    const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
+    setVideos(storedVideos);
+  }, [videoId]);
+
+  useEffect(() => {
+    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
+    setSections(storedSections);
   }, [videoId]);
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
@@ -116,7 +126,7 @@ function App() {
     try {
       const apiKey = import.meta.env.VITE_REACT_APP_YOUTUBE_API_KEY;
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`
+        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`,
       );
       const data = await response.json();
       if (data.items.length > 0) {
@@ -128,14 +138,29 @@ function App() {
   };
 
   const handleLoadVideo = async () => {
-    const existingData = JSON.parse(localStorage.getItem(tempVideoId) || '{}');
-    console.log('existingData', existingData);
-    if (existingData.sections) {
-      setSections(existingData.sections);
-      setVideoId(tempVideoId);
-    } else {
-      setVideoId(tempVideoId);
-    }
+    setVideoId(tempVideoId);
+
+    const title = await fetchVideoTitle(tempVideoId);
+    setVideoTitle(title);
+
+    const storedSections = JSON.parse(
+      localStorage.getItem(tempVideoId) || '[]',
+    );
+    setSections(storedSections);
+  };
+
+  const handleStoredVideoClick = async (
+    videoId: string,
+    videoTitle: string,
+  ) => {
+    setVideoId(videoId);
+    setVideoTitle(videoTitle);
+    setTempVideoId(videoId);
+
+    const storedSections = JSON.parse(
+      localStorage.getItem(tempVideoId) || '[]',
+    );
+    setSections(storedSections);
   };
 
   const handleClearVideo = () => {
@@ -170,11 +195,6 @@ function App() {
   };
 
   const saveSection = async () => {
-    if (!videoTitle) {
-      const title = await fetchVideoTitle(tempVideoId);
-      setVideoTitle(title);
-    }
-
     const section = {
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
@@ -184,32 +204,26 @@ function App() {
       endSeconds: tempEndSeconds,
       note: note,
     };
-    const sectionData = {
-      startHours: section.startHours,
-      startMinutes: section.startMinutes,
-      startSeconds: section.startSeconds,
-      endHours: section.endHours,
-      endMinutes: section.endMinutes,
-      endSeconds: section.endSeconds,
-      note: section.note,
-    };
 
-    const existingData = JSON.parse(localStorage.getItem(videoId) || '{}');
-    const existingSections = existingData.sections || [];
+    const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
     if (activeSectionIndex === null) {
-      existingSections.push(sectionData);
+      storedData.push(section);
     } else {
       if (activeSectionIndex !== -1) {
-        existingSections[activeSectionIndex] = sectionData;
+        storedData[activeSectionIndex] = section;
       }
     }
-    localStorage.setItem(videoId, JSON.stringify({ sections: existingSections }));
-    setSections(existingSections);
-    seekSection(existingSections[existingSections.length - 1], existingSections.length - 1);
+    localStorage.setItem(videoId, JSON.stringify(storedData));
+    setSections(storedData);
+    seekSection(storedData[storedData.length - 1], storedData.length - 1);
 
     const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
-    const videoEntry = { videoId, videoTitle: videoTitle || existingData.videoTitle };
-    if (!existingVideos.some((video: { videoId: string }) => video.videoId === videoId)) {
+    const videoEntry = { videoId, videoTitle };
+    if (
+      !existingVideos.some(
+        (video: { videoId: string }) => video.videoId === videoId,
+      )
+    ) {
       existingVideos.push(videoEntry);
       localStorage.setItem('videos', JSON.stringify(existingVideos));
     }
@@ -232,15 +246,18 @@ function App() {
     setEndSeconds(section.endSeconds);
   };
 
-  const seekSection = (section: {
-    startHours: number;
-    startMinutes: number;
-    startSeconds: number;
-    endHours: number;
-    endMinutes: number;
-    endSeconds: number;
-    note: string;
-  }, index: number) => {
+  const seekSection = (
+    section: {
+      startHours: number;
+      startMinutes: number;
+      startSeconds: number;
+      endHours: number;
+      endMinutes: number;
+      endSeconds: number;
+      note: string;
+    },
+    index: number,
+  ) => {
     setSection(section);
     setActiveSectionIndex(index);
     setTempStartHours(section.startHours);
@@ -266,12 +283,12 @@ function App() {
 
   const deleteSection = (index: number) => {
     if (window.confirm('Delete this section?')) {
-      const existingSections = JSON.parse(localStorage.getItem(videoId) || '[]');
+      const existingSections = JSON.parse(
+        localStorage.getItem(videoId) || '[]',
+      );
       existingSections.splice(index, 1);
       localStorage.setItem(videoId, JSON.stringify(existingSections));
-      setSections(() =>
-        existingSections.splice(index, 1)
-      );
+      setSections(existingSections);
     }
   };
 
@@ -293,30 +310,49 @@ function App() {
           </div>
         </div>
         <div className="m-4 px-3 w-full max-w-md">
-          <div className="block">
-            <label htmlFor="videoId" className="text-sm font-bold">
-              Video ID
-            </label>
-            <div className="flex items-center">
-              <input
-                id="videoId"
-                type="text"
-                value={tempVideoId}
-                onChange={(e) => setTempVideoId(e.target.value)}
-                className={
-                  'border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500'
-                }
-                disabled={videoId !== ''}
-              />
-              <button
-                type={'button'}
-                onClick={videoId ? handleClearVideo : handleLoadVideo}
-                className="ml-2 p-2 rounded bg-black text-white"
-              >
-                {videoId ? 'Clear' : 'Load'}
-              </button>
+          {videoId === '' && (
+            <div className="block">
+              <label htmlFor="videoId" className="text-sm font-bold">
+                Video ID
+              </label>
+              <div className="flex items-center">
+                <input
+                  id="videoId"
+                  type="text"
+                  value={tempVideoId}
+                  onChange={(e) => setTempVideoId(e.target.value)}
+                  className={
+                    'border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500'
+                  }
+                  disabled={videoId !== ''}
+                />
+                <button
+                  type={'button'}
+                  onClick={videoId ? handleClearVideo : handleLoadVideo}
+                  className="ml-2 p-2 rounded bg-black text-white"
+                >
+                  {videoId ? 'Clear' : 'Load'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+          {videoId === '' && videos.length > 0 && (
+            <div className="mt-2">
+              <h2 className="text-sm font-bold">Stored Videos</h2>
+              <ul className="list-disc list-inside">
+                {videos.map((video) => (
+                  <li
+                    key={video.videoId}
+                    onClick={() =>
+                      handleStoredVideoClick(video.videoId, video.videoTitle)
+                    }
+                  >
+                    {video.videoTitle} ({video.videoId})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {videoId && (
             <div className="mt-2">
               <div className="block">
@@ -437,7 +473,9 @@ function App() {
                   onClick={() => saveSection()}
                   className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
                 >
-                  Save Section
+                  {activeSectionIndex !== null
+                    ? 'Update Section'
+                    : 'Add Section'}
                 </button>
                 <button
                   type={'button'}
@@ -466,14 +504,12 @@ function App() {
                     onChange={() => seekSection(section, index)}
                   />
                   <div className="flex-1 overflow-hidden mx-2">
-                      <div className="text-xs truncate">{videoTitle}</div>
-                      <div className="text-xs text-gray-500">
-                        {section.startHours}:
-                        {formatSeconds(section.startMinutes)}:
-                        {formatSeconds(section.startSeconds)}-{section.endHours}
-                        :{formatSeconds(section.endMinutes)}:
-                        {formatSeconds(section.endSeconds)}
-                      </div>
+                    <div className="text-sm">
+                      {section.startHours}:{formatSeconds(section.startMinutes)}
+                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
+                      {formatSeconds(section.endMinutes)}:
+                      {formatSeconds(section.endSeconds)}
+                    </div>
                     {section.note && (
                       <div className="mt-1 text-sm text-gray-600 truncate">
                         {section.note}
@@ -494,6 +530,19 @@ function App() {
                 </div>
               ))}
             </div>
+          )}
+          {videoId && (
+            <>
+              <hr className="my-2 border-gray-300" />
+              <button
+                type={'button'}
+                onClick={handleClearVideo}
+                className="p-2 w-full rounded flex items-center justify-center bg-black text-white"
+              >
+                <GoVideo className="mr-2 text-lg" />
+                Other videos
+              </button>
+            </>
           )}
         </div>
       </div>
