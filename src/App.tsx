@@ -369,79 +369,79 @@ function App() {
                   type="text"
                   value={tempVideoId}
                   onChange={(e) => setTempVideoId(e.target.value)}
-                  className={
-                    'border rounded p-2 w-full border-gray-300'
-                  }
+                  className={'border rounded p-2 w-full textbox'}
                 />
                 <button
                   type={'button'}
                   onClick={() => handleLoadVideo(tempVideoId)}
-                  className="ml-2 p-2 rounded bg-black text-white"
+                  className="ml-2 bg-black text-white btn"
                 >
                   Load
                 </button>
               </div>
             </div>
           )}
-          <hr className="my-4 border-gray-300"/>
           {!videoId && videos.length > 0 && (
             <div className="mt-2">
+              <hr className="my-4 border-gray-300" />
               <h2 className="text-sm font-bold">Stored Videos</h2>
-              {videos.map((video) => (
-                <div
-                  key={video.videoId}
-                  className="p-2 rounded"
-                  onClick={() =>
-                    handleStoredVideoClick(video.videoId, video.videoTitle)
-                  }
-                >
-                  <div className="truncate">{video.videoTitle}</div>
-                  <div className="text-sm">
-                    ({video.videoId})
-                  </div>
-                </div>
-              ))}
+              <div className="flex-col space-y-2">
+                {videos.map((video) => (
+                  <button
+                    type={'button'}
+                    key={video.videoId}
+                    className="card"
+                    onClick={() =>
+                      handleStoredVideoClick(video.videoId, video.videoTitle)
+                    }
+                  >
+                    <div className="truncate">{video.videoTitle}</div>
+                    <div className="text-xs text-gray-600">{video.videoId}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           {videoId && sections.length > 0 && (
             <div className="mt-2">
               <h2 className="text-sm font-bold">Sections</h2>
-              {sections.map((section) => (
-                <div
-                  key={section.id}
-                  className={`p-2 flex items-center rounded ${
-                    activeSectionId === section.id ? 'bg-gray-100' : ''
-                  }`}
-                  onClick={() => handleClickSection(section)}
-                >
-                  <div className="flex-1 overflow-hidden">
-                    <div className="text-sm">
-                      <span className="font-bold mr-2">{section.id}</span>
-                      {section.startHours}:{formatSeconds(section.startMinutes)}
-                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
-                      {formatSeconds(section.endMinutes)}:
-                      {formatSeconds(section.endSeconds)}
-                    </div>
-                    {section.note && (
-                      <div className="mt-1 text-sm text-gray-600 truncate">
-                        {section.note}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type={'button'}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSection(section.id);
-                    }}
-                    className="p-2 border rounded border-gray-300 bg-white"
+              <div className="flex-col items-center space-y-2">
+                {sections.map((section) => (
+                  <div
+                    key={section.id}
+                    className={`flex-col card ${
+                      activeSectionId === section.id ? 'bg-slate-200' : ''
+                    }`}
+                    onClick={() => handleClickSection(section)}
                   >
-                    <span className="sr-only">Delete</span>
-                    <FaRegTrashAlt/>
-                  </button>
-                </div>
-              ))}
-              <hr className="my-4 border-gray-300"/>
+                    <div className="flex justify-between text-sm">
+                      <div>
+                        <span className="font-bold mr-2">{section.id}</span>
+                        {section.startHours}:
+                        {formatSeconds(section.startMinutes)}:
+                        {formatSeconds(section.startSeconds)}-{section.endHours}
+                        :{formatSeconds(section.endMinutes)}:
+                        {formatSeconds(section.endSeconds)}
+                      </div>
+                      <button
+                        type={'button'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSection(section.id);
+                        }}
+                        className="text-slate-800 hover:text-slate-500 active:text-slate-500"
+                      >
+                        <span className="sr-only">Delete</span>
+                        <FaRegTrashAlt />
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {section.note}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <hr className="my-4 border-gray-300" />
             </div>
           )}
           {videoId && (
@@ -457,7 +457,7 @@ function App() {
                     type="tel"
                     value={tempStartHours}
                     onChange={(e) => setTempStartHours(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <span className="mx-1">:</span>
                   <label htmlFor="startMinutes" className="sr-only">
@@ -470,7 +470,7 @@ function App() {
                     onChange={(e) =>
                       setTempStartMinutes(Number(e.target.value))
                     }
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <span className="mx-1">:</span>
                   <label htmlFor="startSeconds" className="sr-only">
@@ -483,7 +483,7 @@ function App() {
                     onChange={(e) =>
                       setTempStartSeconds(Number(e.target.value))
                     }
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <button
                     type={'button'}
@@ -494,7 +494,7 @@ function App() {
                         setTempStartSeconds,
                       )
                     }
-                    className="ml-2 p-2 rounded bg-black text-white"
+                    className="ml-2 btn btn-secondary"
                   >
                     Now
                   </button>
@@ -511,7 +511,7 @@ function App() {
                     type="tel"
                     value={tempEndHours}
                     onChange={(e) => setTempEndHours(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <span className="mx-1">:</span>
                   <label htmlFor="endMinutes" className="sr-only">
@@ -522,7 +522,7 @@ function App() {
                     type="tel"
                     value={formatSeconds(tempEndMinutes)}
                     onChange={(e) => setTempEndMinutes(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <span className="mx-1">:</span>
                   <label htmlFor="endSeconds" className="sr-only">
@@ -533,7 +533,7 @@ function App() {
                     type="tel"
                     value={formatSeconds(tempEndSeconds)}
                     onChange={(e) => setTempEndSeconds(Number(e.target.value))}
-                    className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                    className="border rounded p-2 w-full textbox"
                   />
                   <button
                     type={'button'}
@@ -544,7 +544,7 @@ function App() {
                         setTempEndSeconds,
                       )
                     }
-                    className="ml-2 p-2 rounded bg-black text-white"
+                    className="ml-2 btn btn-secondary"
                   >
                     Now
                   </button>
@@ -555,13 +555,13 @@ function App() {
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="border rounded p-2 w-full border-gray-300"
+                  className="w-full textbox"
                 />
               </div>
               <button
                 type={'button'}
                 onClick={() => saveSection()}
-                className="mt-4 p-2 w-full rounded bg-black text-white"
+                className="mt-4 w-full btn btn-primary"
               >
                 {activeSectionId !== 0 ? 'Update Section' : 'Add Section'}
               </button>
@@ -569,13 +569,13 @@ function App() {
           )}
           {videoId && (
             <>
-              <hr className="my-4 border-gray-300"/>
+              <hr className="my-4 border-gray-300" />
               <button
                 type={'button'}
                 onClick={handleClearVideo}
-                className="p-2 w-full rounded flex items-center justify-center bg-black text-white"
+                className="w-full flex items-center justify-center btn btn-secondary"
               >
-                <GoVideo className="mr-2 text-lg"/>
+                <GoVideo className="mr-2 text-lg" />
                 Other videos
               </button>
             </>
