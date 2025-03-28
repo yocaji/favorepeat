@@ -22,6 +22,7 @@ function App() {
   >([]);
   const [sections, setSections] = useState<
     {
+      id: number; // idフィールドを追加
       startHours: number;
       startMinutes: number;
       startSeconds: number;
@@ -196,6 +197,7 @@ function App() {
 
   const saveSection = async () => {
     const section = {
+      id: activeSectionIndex === null ? sections.length > 0 ? sections[sections.length - 1].id + 1 : 1 : sections[activeSectionIndex].id, // idを設定
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
       startSeconds: tempStartSeconds,
@@ -230,6 +232,7 @@ function App() {
   };
 
   const setSection = (section: {
+    id: number;
     startHours: number;
     startMinutes: number;
     startSeconds: number;
@@ -248,6 +251,7 @@ function App() {
 
   const seekSection = (
     section: {
+      id: number;
       startHours: number;
       startMinutes: number;
       startSeconds: number;
@@ -287,8 +291,46 @@ function App() {
         localStorage.getItem(videoId) || '[]',
       );
       existingSections.splice(index, 1);
-      localStorage.setItem(videoId, JSON.stringify(existingSections));
+      if (existingSections.length === 0) {
+        const existingVideos = JSON.parse(
+          localStorage.getItem('videos') || '[]',
+        );
+        const updatedVideos = existingVideos.filter(
+          (video: { videoId: string }) => video.videoId !== videoId,
+        );
+        localStorage.setItem('videos', JSON.stringify(updatedVideos));
+        setVideos(updatedVideos);
+        localStorage.removeItem(videoId);
+        clearSection();
+      } else {
+        localStorage.setItem(videoId, JSON.stringify(existingSections));
+        if (activeSectionIndex === index) {
+          clearSection();
+        } else if (activeSectionIndex !== null && activeSectionIndex > index) {
+          setActiveSectionIndex(activeSectionIndex - 1);
+        }
+      }
       setSections(existingSections);
+    }
+  };
+
+  const handleClickSection = (
+    section: {
+      id: number;
+      startHours: number;
+      startMinutes: number;
+      startSeconds: number;
+      endHours: number;
+      endMinutes: number;
+      endSeconds: number;
+      note: string;
+    },
+    index: number,
+  ) => {
+    if (activeSectionIndex === index) {
+      clearSection();
+    } else {
+      seekSection(section, index);
     }
   };
 
@@ -351,6 +393,45 @@ function App() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {videoId && sections.length > 0 && (
+            <div className="mt-5">
+              <hr className="my-2 border-gray-300" />
+              <h2 className="mt-5 text-sm font-bold">Sections</h2>
+              {sections.map((section, index) => (
+                <div
+                  key={index}
+                  className={`p-2 flex items-center rounded ${activeSectionIndex === index ? 'bg-gray-100' : ''}`}
+                  onClick={() => handleClickSection(section, index)}
+                >
+                  <div className="flex-1 overflow-hidden">
+                    <div className="text-sm">
+                      <span className="font-bold mr-2">{section.id}</span>
+                      {section.startHours}:{formatSeconds(section.startMinutes)}
+                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
+                      {formatSeconds(section.endMinutes)}:
+                      {formatSeconds(section.endSeconds)}
+                    </div>
+                    {section.note && (
+                      <div className="mt-1 text-sm text-gray-600 truncate">
+                        {section.note}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type={'button'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteSection(index);
+                    }}
+                    className="p-2 border rounded border-gray-300 bg-white"
+                  >
+                    <span className="sr-only">Delete</span>
+                    <FaRegTrashAlt />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
           {videoId && (
@@ -477,58 +558,7 @@ function App() {
                     ? 'Update Section'
                     : 'Add Section'}
                 </button>
-                <button
-                  type={'button'}
-                  onClick={() => clearSection()}
-                  className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
-                >
-                  Reset Section
-                </button>
               </div>
-            </div>
-          )}
-          {videoId && sections.length > 0 && (
-            <div className="mt-5">
-              <hr className="my-2 border-gray-300" />
-              <h2 className="mt-5 text-sm font-bold">Sections</h2>
-              {sections.map((section, index) => (
-                <div
-                  key={index}
-                  className={`p-2 flex items-center rounded ${activeSectionIndex === index ? 'bg-gray-100' : ''}`}
-                  onClick={() => seekSection(section, index)}
-                >
-                  <input
-                    type="radio"
-                    name="section"
-                    checked={activeSectionIndex === index}
-                    onChange={() => seekSection(section, index)}
-                  />
-                  <div className="flex-1 overflow-hidden mx-2">
-                    <div className="text-sm">
-                      {section.startHours}:{formatSeconds(section.startMinutes)}
-                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
-                      {formatSeconds(section.endMinutes)}:
-                      {formatSeconds(section.endSeconds)}
-                    </div>
-                    {section.note && (
-                      <div className="mt-1 text-sm text-gray-600 truncate">
-                        {section.note}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type={'button'}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSection(index);
-                    }}
-                    className="p-2 border rounded border-gray-300 bg-white"
-                  >
-                    <span className="sr-only">Delete</span>
-                    <FaRegTrashAlt />
-                  </button>
-                </div>
-              ))}
             </div>
           )}
           {videoId && (
