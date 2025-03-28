@@ -374,7 +374,7 @@ function App() {
                 <button
                   type={'button'}
                   onClick={() => handleLoadVideo(tempVideoId)}
-                  className="ml-2 bg-black text-white btn"
+                  className="ml-2 btn btn-primary"
                 >
                   Load
                 </button>
