@@ -350,10 +350,10 @@ function App() {
   return (
     <>
       <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
-      <div className="flex flex-col items-center">
+      {videoId && (
         <div
           className="w-full relative"
-          style={{ maxWidth: '448px', maxHeight: '252px' }}
+          style={{maxWidth: '448px', maxHeight: '252px'}}
         >
           <div className="w-full h-full">
             <YouTube
@@ -364,6 +364,8 @@ function App() {
             />
           </div>
         </div>
+      )}
+      <div className="flex flex-col items-center">
         <div className="m-4 px-3 w-full max-w-md">
           {!videoId && (
             <div className="block">
@@ -390,7 +392,7 @@ function App() {
           )}
           {!videoId && videos.length > 0 && (
             <div className="mt-2">
-              <hr className="my-4 border-gray-300" />
+              <hr className="my-4 border-gray-300"/>
               <h2 className="text-sm font-bold">Stored Videos</h2>
               <div className="flex-col space-y-2">
                 {videos.map((video) => (
@@ -439,7 +441,7 @@ function App() {
                         className="text-slate-800 hover:text-slate-500 active:text-slate-500"
                       >
                         <span className="sr-only">Delete</span>
-                        <FaRegTrashAlt />
+                        <FaRegTrashAlt/>
                       </button>
                     </div>
                     <div className="text-xs text-gray-600 truncate">
@@ -448,7 +450,7 @@ function App() {
                   </div>
                 ))}
               </div>
-              <hr className="my-4 border-gray-300" />
+              <hr className="my-4 border-gray-300"/>
             </div>
           )}
           {videoId && (
@@ -576,13 +578,13 @@ function App() {
           )}
           {videoId && (
             <>
-              <hr className="my-4 border-gray-300" />
+              <hr className="my-4 border-gray-300"/>
               <button
                 type={'button'}
                 onClick={handleClearVideo}
                 className="w-full flex items-center justify-center btn btn-secondary"
               >
-                <GoVideo className="mr-2 text-lg" />
+                <GoVideo className="mr-2 text-lg"/>
                 Other videos
               </button>
             </>
