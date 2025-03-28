@@ -145,7 +145,14 @@ function App() {
     }
   };
 
-  const handleLoadVideo = async (videoId: string) => {
+  const extractVideoId = (input: string): string => {
+    const urlPattern = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|watch\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = input.match(urlPattern);
+    return match ? match[1] : input;
+  };
+
+  const handleLoadVideo = async (input: string) => {
+    const videoId = extractVideoId(input);
     const title: string = await fetchVideoTitle(videoId);
     setVideoTitle(title);
     const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
@@ -361,7 +368,7 @@ function App() {
           {!videoId && (
             <div className="block">
               <label htmlFor="videoId" className="text-sm font-bold">
-                Video ID
+                Video ID or URL
               </label>
               <div className="flex items-center">
                 <input
