@@ -50,17 +50,30 @@ function App() {
     setOpts({
       playerVars: {
         autoplay: 1,
-        start: activeSectionId > 0
-          ? startHours * 3600 + startMinutes * 60 + startSeconds
-          : currentTime,
-        end: activeSectionId > 0
-          ? endHours * 3600 + endMinutes * 60 + endSeconds
-          : undefined,
+        start: !videoId
+          ? undefined
+          : activeSectionId > 0
+            ? startHours * 3600 + startMinutes * 60 + startSeconds
+            : currentTime,
+        end:
+          activeSectionId > 0
+            ? endHours * 3600 + endMinutes * 60 + endSeconds
+            : undefined,
       },
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
     });
-  }, [activeSectionId, startHours, startMinutes, startSeconds, endHours, endMinutes, endSeconds, videoHeight]);
+  }, [
+    videoId,
+    activeSectionId,
+    startHours,
+    startMinutes,
+    startSeconds,
+    endHours,
+    endMinutes,
+    endSeconds,
+    videoHeight,
+  ]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
@@ -78,13 +91,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    updateOpts();
-  }, [updateOpts]);
-
-  useEffect(() => {
     const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
     setVideos(storedVideos);
-  }, [videoId]);
+  }, []);
+
+  useEffect(() => {
+    updateOpts();
+  }, [updateOpts]);
 
   useEffect(() => {
     const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
@@ -118,13 +131,14 @@ function App() {
         `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`,
       );
       if (response.status !== 200) {
-        console.error(`Error fetching video title: ${response.status} ${response.statusText}`);
+        console.error(
+          `Error fetching video title: ${response.status} ${response.statusText}`,
+        );
         return 'Anonymous';
-      } else {
-        const data = await response.json();
-        if (data.items.length > 0) {
-          return data.items[0].snippet.title;
-        }
+      }
+      const data = await response.json();
+      if (data.items.length > 0) {
+        return data.items[0].snippet.title;
       }
     } catch (error) {
       console.error('Error fetching video title:', error);
@@ -134,9 +148,7 @@ function App() {
   const handleLoadVideo = async (videoId: string) => {
     const title: string = await fetchVideoTitle(videoId);
     setVideoTitle(title);
-    const storedSections = JSON.parse(
-      localStorage.getItem(videoId) || '[]',
-    );
+    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
     setSections(storedSections);
     setVideoId(videoId);
     setTempVideoId('');
@@ -149,9 +161,7 @@ function App() {
     setVideoId(videoId);
     setVideoTitle(videoTitle);
 
-    const storedSections = JSON.parse(
-      localStorage.getItem(videoId) || '[]',
-    );
+    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
     setSections(storedSections);
   };
 
@@ -164,11 +174,15 @@ function App() {
     setEndHours(0);
     setEndMinutes(0);
     setEndSeconds(0);
+    setTempStartHours(0);
     setTempStartMinutes(0);
     setTempStartSeconds(0);
+    setTempEndHours(0);
     setTempEndMinutes(0);
     setTempEndSeconds(0);
     setNote('');
+    const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
+    setVideos(storedVideos);
   };
 
   const setTimeToCurrent = async (
@@ -186,11 +200,12 @@ function App() {
 
   const saveSection = async () => {
     const section = {
-      id: activeSectionId === 0
-        ? sections.length > 0
-          ? sections[sections.length - 1].id + 1
-          : 1
-        : sections.find((s) => s.id === activeSectionId)?.id,
+      id:
+        activeSectionId === 0
+          ? sections.length > 0
+            ? sections[sections.length - 1].id + 1
+            : 1
+          : sections.find((s) => s.id === activeSectionId)?.id,
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
       startSeconds: tempStartSeconds,
@@ -205,7 +220,7 @@ function App() {
       storedData.push(section);
     } else {
       const sectionIndex = storedData.findIndex(
-        (s: { id: number; }) => s.id === activeSectionId,
+        (s: { id: number }) => s.id === activeSectionId,
       );
       if (sectionIndex !== -1) {
         storedData[sectionIndex] = section;
@@ -244,18 +259,16 @@ function App() {
     setEndSeconds(section.endSeconds);
   };
 
-  const seekSection = (
-    section: {
-      id: number;
-      startHours: number;
-      startMinutes: number;
-      startSeconds: number;
-      endHours: number;
-      endMinutes: number;
-      endSeconds: number;
-      note: string;
-    },
-  ) => {
+  const seekSection = (section: {
+    id: number;
+    startHours: number;
+    startMinutes: number;
+    startSeconds: number;
+    endHours: number;
+    endMinutes: number;
+    endSeconds: number;
+    note: string;
+  }) => {
     setSection(section);
     setActiveSectionId(section.id);
     setTempStartHours(section.startHours);
@@ -283,7 +296,9 @@ function App() {
       const existingSections = JSON.parse(
         localStorage.getItem(videoId) || '[]',
       );
-      const sectionIndex = existingSections.findIndex((s: { id: number; }) => s.id === id);
+      const sectionIndex = existingSections.findIndex(
+        (s: { id: number }) => s.id === id,
+      );
       if (sectionIndex !== -1) {
         existingSections.splice(sectionIndex, 1);
         if (existingSections.length === 0) {
@@ -308,18 +323,16 @@ function App() {
     }
   };
 
-  const handleClickSection = (
-    section: {
-      id: number;
-      startHours: number;
-      startMinutes: number;
-      startSeconds: number;
-      endHours: number;
-      endMinutes: number;
-      endSeconds: number;
-      note: string;
-    },
-  ) => {
+  const handleClickSection = (section: {
+    id: number;
+    startHours: number;
+    startMinutes: number;
+    startSeconds: number;
+    endHours: number;
+    endMinutes: number;
+    endSeconds: number;
+    note: string;
+  }) => {
     if (activeSectionId === section.id) {
       clearSection();
     } else {
@@ -345,7 +358,7 @@ function App() {
           </div>
         </div>
         <div className="m-4 px-3 w-full max-w-md">
-          {videoId === '' && (
+          {!videoId && (
             <div className="block">
               <label htmlFor="videoId" className="text-sm font-bold">
                 Video ID
@@ -370,27 +383,29 @@ function App() {
               </div>
             </div>
           )}
-          {videoId === '' && videos.length > 0 && (
+          <hr className="my-4 border-gray-300"/>
+          {!videoId && videos.length > 0 && (
             <div className="mt-2">
               <h2 className="text-sm font-bold">Stored Videos</h2>
-              <ul className="list-disc list-inside">
-                {videos.map((video) => (
-                  <li
-                    key={video.videoId}
-                    onClick={() =>
-                      handleStoredVideoClick(video.videoId, video.videoTitle)
-                    }
-                  >
-                    {video.videoTitle} ({video.videoId})
-                  </li>
-                ))}
-              </ul>
+              {videos.map((video) => (
+                <div
+                  key={video.videoId}
+                  className="p-2 rounded"
+                  onClick={() =>
+                    handleStoredVideoClick(video.videoId, video.videoTitle)
+                  }
+                >
+                  <div className="truncate">{video.videoTitle}</div>
+                  <div className="text-sm">
+                    ({video.videoId})
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           {videoId && sections.length > 0 && (
-            <div className="mt-5">
-              <hr className="my-2 border-gray-300" />
-              <h2 className="mt-5 text-sm font-bold">Sections</h2>
+            <div className="mt-2">
+              <h2 className="text-sm font-bold">Sections</h2>
               {sections.map((section) => (
                 <div
                   key={section.id}
@@ -422,14 +437,15 @@ function App() {
                     className="p-2 border rounded border-gray-300 bg-white"
                   >
                     <span className="sr-only">Delete</span>
-                    <FaRegTrashAlt />
+                    <FaRegTrashAlt/>
                   </button>
                 </div>
               ))}
+              <hr className="my-4 border-gray-300"/>
             </div>
           )}
           {videoId && (
-            <div className="mt-2">
+            <>
               <div className="block">
                 <span className="text-sm font-bold">Start from</span>
                 <div className="flex items-center">
@@ -539,31 +555,27 @@ function App() {
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500"
+                  className="border rounded p-2 w-full border-gray-300"
                 />
               </div>
-              <div className="flex space-x-2 mt-4">
-                <button
-                  type={'button'}
-                  onClick={() => saveSection()}
-                  className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
-                >
-                  {activeSectionId !== 0
-                    ? 'Update Section'
-                    : 'Add Section'}
-                </button>
-              </div>
-            </div>
+              <button
+                type={'button'}
+                onClick={() => saveSection()}
+                className="mt-4 p-2 w-full rounded bg-black text-white"
+              >
+                {activeSectionId !== 0 ? 'Update Section' : 'Add Section'}
+              </button>
+            </>
           )}
           {videoId && (
             <>
-              <hr className="my-2 border-gray-300" />
+              <hr className="my-4 border-gray-300"/>
               <button
                 type={'button'}
                 onClick={handleClearVideo}
                 className="p-2 w-full rounded flex items-center justify-center bg-black text-white"
               >
-                <GoVideo className="mr-2 text-lg" />
+                <GoVideo className="mr-2 text-lg"/>
                 Other videos
               </button>
             </>
