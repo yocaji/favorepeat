@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+@layer base {
+    body {
+        @apply
+        bg-slate-100
+    }
+    .textbox {
+        @apply
+        p-2 rounded
+        border border-gray-300
+        bg-slate-50
+    }
+    .btn {
+        @apply
+        p-2 rounded
+    }
+    .btn-primary {
+        @apply
+        bg-slate-800 hover:bg-slate-700 active:bg-slate-700
+        text-white
+    }
+    .btn-secondary {
+        @apply
+        bg-slate-200 hover:bg-slate-300 active:bg-slate-300
+        text-slate-800
+    }
+    .card {
+        @apply
+        p-2 rounded w-full
+        border border-gray-200
+        bg-slate-50 hover:bg-white active:bg-white
+        text-left;
+    }
+}
