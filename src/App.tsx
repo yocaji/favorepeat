@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { FaRegTrashAlt } from 'react-icons/fa';
-import { GoVideo } from 'react-icons/go';
 import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
 
 function App() {
@@ -49,7 +48,7 @@ function App() {
     const currentTime = playerRef.current?.getCurrentTime();
     setOpts({
       playerVars: {
-        autoplay: 1,
+        autoplay: activeSectionId > 0 ? 1 : 0,
         start: !videoId
           ? undefined
           : activeSectionId > 0
@@ -146,7 +145,8 @@ function App() {
   };
 
   const extractVideoId = (input: string): string => {
-    const urlPattern = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|watch\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const urlPattern =
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|watch\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     const match = input.match(urlPattern);
     return match ? match[1] : input;
   };
@@ -165,6 +165,7 @@ function App() {
     videoId: string,
     videoTitle: string,
   ) => {
+    setTempVideoId('');
     setVideoId(videoId);
     setVideoTitle(videoTitle);
 
@@ -348,250 +349,242 @@ function App() {
   };
 
   return (
-    <>
-      <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
+    <div className="flex flex-col items-center">
+      {!videoId && (
+        <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
+      )}
       {videoId && (
         <div
-          className="w-full relative"
-          style={{maxWidth: '448px', maxHeight: '252px'}}
+          className="w-full h-full relative"
+          style={{ maxWidth: '448px', maxHeight: '252px' }}
         >
-          <div className="w-full h-full">
-            <YouTube
-              videoId={videoId}
-              opts={opts}
-              onReady={onPlayerReady}
-              onStateChange={onPlayerStateChange}
-            />
-          </div>
+          <YouTube
+            videoId={videoId}
+            opts={opts}
+            onReady={onPlayerReady}
+            onStateChange={onPlayerStateChange}
+          />
         </div>
       )}
-      <div className="flex flex-col items-center">
-        <div className="m-4 px-3 w-full max-w-md">
-          {!videoId && (
+      <div className="m-4 px-3 w-full max-w-md">
+        {!videoId && videos.length > 0 && (
+          <div>
+            <h2 className="text-sm font-bold">Stored Videos</h2>
+            <div className="flex-col space-y-2">
+              {videos.map((video) => (
+                <button
+                  type={'button'}
+                  key={video.videoId}
+                  className="card"
+                  onClick={() =>
+                    handleStoredVideoClick(video.videoId, video.videoTitle)
+                  }
+                >
+                  <div className="truncate">{video.videoTitle}</div>
+                  <div className="text-xs text-gray-600">{video.videoId}</div>
+                </button>
+              ))}
+            </div>
+            <hr className="my-4 border-gray-300" />
+          </div>
+        )}
+        {!videoId && (
+          <div>
+            <label htmlFor="videoId" className="text-sm font-bold">
+              Video ID or URL
+            </label>
+            <div className="flex items-center">
+              <input
+                id="videoId"
+                type="text"
+                value={tempVideoId}
+                onChange={(e) => setTempVideoId(e.target.value)}
+                className="textbox w-full"
+              />
+              <button
+                type={'button'}
+                onClick={() => handleLoadVideo(tempVideoId)}
+                className="ml-2 btn btn-primary"
+              >
+                Load
+              </button>
+            </div>
+          </div>
+        )}
+        {videoId && sections.length > 0 && (
+          <div className="mt-2">
+            <h2 className="text-sm font-bold">Sections</h2>
+            <div className="flex-col items-center space-y-2">
+              {sections.map((section) => (
+                <div
+                  key={section.id}
+                  className={`flex-col card ${
+                    activeSectionId === section.id ? 'bg-slate-200' : ''
+                  }`}
+                  onClick={() => handleClickSection(section)}
+                >
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <span className="font-bold mr-2">{section.id}</span>
+                      {section.startHours}:{formatSeconds(section.startMinutes)}
+                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
+                      {formatSeconds(section.endMinutes)}:
+                      {formatSeconds(section.endSeconds)}
+                    </div>
+                    <button
+                      type={'button'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSection(section.id);
+                      }}
+                      className="text-slate-800 hover:text-slate-500 active:text-slate-500"
+                    >
+                      <span className="sr-only">Delete</span>
+                      <FaRegTrashAlt />
+                    </button>
+                  </div>
+                  <div className="text-xs text-gray-600 truncate">
+                    {section.note}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <hr className="my-4 border-gray-300" />
+          </div>
+        )}
+        {videoId && (
+          <>
             <div className="block">
-              <label htmlFor="videoId" className="text-sm font-bold">
-                Video ID or URL
-              </label>
+              <span className="text-sm font-bold">Start from</span>
               <div className="flex items-center">
+                <label htmlFor="startHours" className="sr-only">
+                  Start Hours
+                </label>
                 <input
-                  id="videoId"
-                  type="text"
-                  value={tempVideoId}
-                  onChange={(e) => setTempVideoId(e.target.value)}
-                  className={'border rounded p-2 w-full textbox'}
+                  id="startHours"
+                  type="tel"
+                  value={tempStartHours}
+                  onChange={(e) => setTempStartHours(Number(e.target.value))}
+                  className="w-full textbox"
+                />
+                <span className="mx-1">:</span>
+                <label htmlFor="startMinutes" className="sr-only">
+                  Start Minutes
+                </label>
+                <input
+                  id="startMinutes"
+                  type="tel"
+                  value={formatSeconds(tempStartMinutes)}
+                  onChange={(e) => setTempStartMinutes(Number(e.target.value))}
+                  className="w-full textbox"
+                />
+                <span className="mx-1">:</span>
+                <label htmlFor="startSeconds" className="sr-only">
+                  Start Seconds
+                </label>
+                <input
+                  id="startSeconds"
+                  type="tel"
+                  value={formatSeconds(tempStartSeconds)}
+                  onChange={(e) => setTempStartSeconds(Number(e.target.value))}
+                  className="w-full textbox"
                 />
                 <button
                   type={'button'}
-                  onClick={() => handleLoadVideo(tempVideoId)}
-                  className="ml-2 btn btn-primary"
+                  onClick={() =>
+                    setTimeToCurrent(
+                      setTempStartHours,
+                      setTempStartMinutes,
+                      setTempStartSeconds,
+                    )
+                  }
+                  className="ml-2 btn btn-secondary"
                 >
-                  Load
+                  Now
                 </button>
               </div>
             </div>
-          )}
-          {!videoId && videos.length > 0 && (
-            <div className="mt-2">
-              <hr className="my-4 border-gray-300"/>
-              <h2 className="text-sm font-bold">Stored Videos</h2>
-              <div className="flex-col space-y-2">
-                {videos.map((video) => (
-                  <button
-                    type={'button'}
-                    key={video.videoId}
-                    className="card"
-                    onClick={() =>
-                      handleStoredVideoClick(video.videoId, video.videoTitle)
-                    }
-                  >
-                    <div className="truncate">{video.videoTitle}</div>
-                    <div className="text-xs text-gray-600">{video.videoId}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {videoId && sections.length > 0 && (
-            <div className="mt-2">
-              <h2 className="text-sm font-bold">Sections</h2>
-              <div className="flex-col items-center space-y-2">
-                {sections.map((section) => (
-                  <div
-                    key={section.id}
-                    className={`flex-col card ${
-                      activeSectionId === section.id ? 'bg-slate-200' : ''
-                    }`}
-                    onClick={() => handleClickSection(section)}
-                  >
-                    <div className="flex justify-between text-sm">
-                      <div>
-                        <span className="font-bold mr-2">{section.id}</span>
-                        {section.startHours}:
-                        {formatSeconds(section.startMinutes)}:
-                        {formatSeconds(section.startSeconds)}-{section.endHours}
-                        :{formatSeconds(section.endMinutes)}:
-                        {formatSeconds(section.endSeconds)}
-                      </div>
-                      <button
-                        type={'button'}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSection(section.id);
-                        }}
-                        className="text-slate-800 hover:text-slate-500 active:text-slate-500"
-                      >
-                        <span className="sr-only">Delete</span>
-                        <FaRegTrashAlt/>
-                      </button>
-                    </div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {section.note}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <hr className="my-4 border-gray-300"/>
-            </div>
-          )}
-          {videoId && (
-            <>
-              <div className="block">
-                <span className="text-sm font-bold">Start from</span>
-                <div className="flex items-center">
-                  <label htmlFor="startHours" className="sr-only">
-                    Start Hours
-                  </label>
-                  <input
-                    id="startHours"
-                    type="tel"
-                    value={tempStartHours}
-                    onChange={(e) => setTempStartHours(Number(e.target.value))}
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <span className="mx-1">:</span>
-                  <label htmlFor="startMinutes" className="sr-only">
-                    Start Minutes
-                  </label>
-                  <input
-                    id="startMinutes"
-                    type="tel"
-                    value={formatSeconds(tempStartMinutes)}
-                    onChange={(e) =>
-                      setTempStartMinutes(Number(e.target.value))
-                    }
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <span className="mx-1">:</span>
-                  <label htmlFor="startSeconds" className="sr-only">
-                    Start Seconds
-                  </label>
-                  <input
-                    id="startSeconds"
-                    type="tel"
-                    value={formatSeconds(tempStartSeconds)}
-                    onChange={(e) =>
-                      setTempStartSeconds(Number(e.target.value))
-                    }
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <button
-                    type={'button'}
-                    onClick={() =>
-                      setTimeToCurrent(
-                        setTempStartHours,
-                        setTempStartMinutes,
-                        setTempStartSeconds,
-                      )
-                    }
-                    className="ml-2 btn btn-secondary"
-                  >
-                    Now
-                  </button>
-                </div>
-              </div>
-              <div className="block mt-2">
-                <span className="text-sm font-bold">End at</span>
-                <div className="flex items-center">
-                  <label htmlFor="endHours" className="sr-only">
-                    End Hours
-                  </label>
-                  <input
-                    id="endHours"
-                    type="tel"
-                    value={tempEndHours}
-                    onChange={(e) => setTempEndHours(Number(e.target.value))}
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <span className="mx-1">:</span>
-                  <label htmlFor="endMinutes" className="sr-only">
-                    End Minutes
-                  </label>
-                  <input
-                    id="endMinutes"
-                    type="tel"
-                    value={formatSeconds(tempEndMinutes)}
-                    onChange={(e) => setTempEndMinutes(Number(e.target.value))}
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <span className="mx-1">:</span>
-                  <label htmlFor="endSeconds" className="sr-only">
-                    End Seconds
-                  </label>
-                  <input
-                    id="endSeconds"
-                    type="tel"
-                    value={formatSeconds(tempEndSeconds)}
-                    onChange={(e) => setTempEndSeconds(Number(e.target.value))}
-                    className="border rounded p-2 w-full textbox"
-                  />
-                  <button
-                    type={'button'}
-                    onClick={() =>
-                      setTimeToCurrent(
-                        setTempEndHours,
-                        setTempEndMinutes,
-                        setTempEndSeconds,
-                      )
-                    }
-                    className="ml-2 btn btn-secondary"
-                  >
-                    Now
-                  </button>
-                </div>
-              </div>
-              <div className="block mt-2">
-                <span className="text-sm font-bold">Note</span>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
+            <div className="block mt-2">
+              <span className="text-sm font-bold">End at</span>
+              <div className="flex items-center">
+                <label htmlFor="endHours" className="sr-only">
+                  End Hours
+                </label>
+                <input
+                  id="endHours"
+                  type="tel"
+                  value={tempEndHours}
+                  onChange={(e) => setTempEndHours(Number(e.target.value))}
                   className="w-full textbox"
                 />
+                <span className="mx-1">:</span>
+                <label htmlFor="endMinutes" className="sr-only">
+                  End Minutes
+                </label>
+                <input
+                  id="endMinutes"
+                  type="tel"
+                  value={formatSeconds(tempEndMinutes)}
+                  onChange={(e) => setTempEndMinutes(Number(e.target.value))}
+                  className="w-full textbox"
+                />
+                <span className="mx-1">:</span>
+                <label htmlFor="endSeconds" className="sr-only">
+                  End Seconds
+                </label>
+                <input
+                  id="endSeconds"
+                  type="tel"
+                  value={formatSeconds(tempEndSeconds)}
+                  onChange={(e) => setTempEndSeconds(Number(e.target.value))}
+                  className="w-full textbox"
+                />
+                <button
+                  type={'button'}
+                  onClick={() =>
+                    setTimeToCurrent(
+                      setTempEndHours,
+                      setTempEndMinutes,
+                      setTempEndSeconds,
+                    )
+                  }
+                  className="ml-2 btn btn-secondary"
+                >
+                  Now
+                </button>
               </div>
-              <button
-                type={'button'}
-                onClick={() => saveSection()}
-                className="mt-4 w-full btn btn-primary"
-              >
-                {activeSectionId !== 0 ? 'Update Section' : 'Add Section'}
-              </button>
-            </>
-          )}
-          {videoId && (
-            <>
-              <hr className="my-4 border-gray-300"/>
-              <button
-                type={'button'}
-                onClick={handleClearVideo}
-                className="w-full flex items-center justify-center btn btn-secondary"
-              >
-                <GoVideo className="mr-2 text-lg"/>
-                Other videos
-              </button>
-            </>
-          )}
-        </div>
+            </div>
+            <div className="block mt-2">
+              <span className="text-sm font-bold">Note</span>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="w-full textbox"
+              />
+            </div>
+            <button
+              type={'button'}
+              onClick={() => saveSection()}
+              className="mt-4 w-full btn btn-primary"
+            >
+              {activeSectionId !== 0 ? 'Update Section' : 'Add Section'}
+            </button>
+          </>
+        )}
+        {videoId && (
+          <>
+            <hr className="my-4 border-gray-300" />
+            <button
+              type={'button'}
+              onClick={handleClearVideo}
+              className="w-full flex items-center justify-center btn btn-secondary"
+            >
+              Close this video
+            </button>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
