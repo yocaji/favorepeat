@@ -117,25 +117,29 @@ function App() {
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`,
       );
-      const data = await response.json();
-      if (data.items.length > 0) {
-        return data.items[0].snippet.title;
+      if (response.status !== 200) {
+        console.error(`Error fetching video title: ${response.status} ${response.statusText}`);
+        return 'Anonymous';
+      } else {
+        const data = await response.json();
+        if (data.items.length > 0) {
+          return data.items[0].snippet.title;
+        }
       }
     } catch (error) {
       console.error('Error fetching video title:', error);
     }
   };
 
-  const handleLoadVideo = async () => {
-    setVideoId(tempVideoId);
-
-    const title = await fetchVideoTitle(tempVideoId);
+  const handleLoadVideo = async (videoId: string) => {
+    const title: string = await fetchVideoTitle(videoId);
     setVideoTitle(title);
-
     const storedSections = JSON.parse(
-      localStorage.getItem(tempVideoId) || '[]',
+      localStorage.getItem(videoId) || '[]',
     );
     setSections(storedSections);
+    setVideoId(videoId);
+    setTempVideoId('');
   };
 
   const handleStoredVideoClick = async (
@@ -144,10 +148,9 @@ function App() {
   ) => {
     setVideoId(videoId);
     setVideoTitle(videoTitle);
-    setTempVideoId(videoId);
 
     const storedSections = JSON.parse(
-      localStorage.getItem(tempVideoId) || '[]',
+      localStorage.getItem(videoId) || '[]',
     );
     setSections(storedSections);
   };
@@ -155,7 +158,6 @@ function App() {
   const handleClearVideo = () => {
     setActiveSectionId(0);
     setVideoId('');
-    setTempVideoId('');
     setStartHours(0);
     setStartMinutes(0);
     setStartSeconds(0);
@@ -355,16 +357,15 @@ function App() {
                   value={tempVideoId}
                   onChange={(e) => setTempVideoId(e.target.value)}
                   className={
-                    'border rounded p-2 w-full border-gray-300 disabled:bg-gray-200 disabled:text-gray-500'
+                    'border rounded p-2 w-full border-gray-300'
                   }
-                  disabled={videoId !== ''}
                 />
                 <button
                   type={'button'}
-                  onClick={videoId ? handleClearVideo : handleLoadVideo}
+                  onClick={() => handleLoadVideo(tempVideoId)}
                   className="ml-2 p-2 rounded bg-black text-white"
                 >
-                  {videoId ? 'Clear' : 'Load'}
+                  Load
                 </button>
               </div>
             </div>
