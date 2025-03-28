@@ -15,14 +15,13 @@ function App() {
   const [videoId, setVideoId] = useState('');
   const [tempVideoId, setTempVideoId] = useState('');
   const [videoHeight, setVideoHeight] = useState('auto');
-  const [isRepeating, setIsRepeating] = useState(false);
   const [opts, setOpts] = useState({});
   const [videos, setVideos] = useState<
     { videoId: string; videoTitle: string }[]
   >([]);
   const [sections, setSections] = useState<
     {
-      id: number; // idフィールドを追加
+      id: number;
       startHours: number;
       startMinutes: number;
       startSeconds: number;
@@ -38,9 +37,7 @@ function App() {
   const [tempEndHours, setTempEndHours] = useState(0);
   const [tempEndMinutes, setTempEndMinutes] = useState(0);
   const [tempEndSeconds, setTempEndSeconds] = useState(0);
-  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(
-    null,
-  );
+  const [activeSectionId, setActiveSectionId] = useState<number>(0);
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
 
@@ -53,26 +50,17 @@ function App() {
     setOpts({
       playerVars: {
         autoplay: 1,
-        start: isRepeating
+        start: activeSectionId > 0
           ? startHours * 3600 + startMinutes * 60 + startSeconds
           : currentTime,
-        end: isRepeating
+        end: activeSectionId > 0
           ? endHours * 3600 + endMinutes * 60 + endSeconds
           : undefined,
       },
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
     });
-  }, [
-    isRepeating,
-    startHours,
-    startMinutes,
-    startSeconds,
-    endHours,
-    endMinutes,
-    endSeconds,
-    videoHeight,
-  ]);
+  }, [activeSectionId, startHours, startMinutes, startSeconds, endHours, endMinutes, endSeconds, videoHeight]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
@@ -109,7 +97,7 @@ function App() {
 
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
     if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
-      if (isRepeating) {
+      if (activeSectionId > 0) {
         playerRef.current
           .seekTo(startHours * 3600 + startMinutes * 60 + startSeconds, true)
           .catch((error) => {
@@ -165,8 +153,7 @@ function App() {
   };
 
   const handleClearVideo = () => {
-    setIsRepeating(false);
-    setActiveSectionIndex(null);
+    setActiveSectionId(0);
     setVideoId('');
     setTempVideoId('');
     setStartHours(0);
@@ -197,7 +184,11 @@ function App() {
 
   const saveSection = async () => {
     const section = {
-      id: activeSectionIndex === null ? sections.length > 0 ? sections[sections.length - 1].id + 1 : 1 : sections[activeSectionIndex].id, // idを設定
+      id: activeSectionId === 0
+        ? sections.length > 0
+          ? sections[sections.length - 1].id + 1
+          : 1
+        : sections.find((s) => s.id === activeSectionId)?.id,
       startHours: tempStartHours,
       startMinutes: tempStartMinutes,
       startSeconds: tempStartSeconds,
@@ -208,16 +199,19 @@ function App() {
     };
 
     const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
-    if (activeSectionIndex === null) {
+    if (activeSectionId === 0) {
       storedData.push(section);
     } else {
-      if (activeSectionIndex !== -1) {
-        storedData[activeSectionIndex] = section;
+      const sectionIndex = storedData.findIndex(
+        (s: { id: number; }) => s.id === activeSectionId,
+      );
+      if (sectionIndex !== -1) {
+        storedData[sectionIndex] = section;
       }
     }
     localStorage.setItem(videoId, JSON.stringify(storedData));
     setSections(storedData);
-    seekSection(storedData[storedData.length - 1], storedData.length - 1);
+    seekSection(storedData[storedData.length - 1]);
 
     const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
     const videoEntry = { videoId, videoTitle };
@@ -240,7 +234,6 @@ function App() {
     endMinutes: number;
     endSeconds: number;
   }) => {
-    setIsRepeating(true);
     setStartHours(section.startHours);
     setStartMinutes(section.startMinutes);
     setStartSeconds(section.startSeconds);
@@ -260,10 +253,9 @@ function App() {
       endSeconds: number;
       note: string;
     },
-    index: number,
   ) => {
     setSection(section);
-    setActiveSectionIndex(index);
+    setActiveSectionId(section.id);
     setTempStartHours(section.startHours);
     setTempStartMinutes(section.startMinutes);
     setTempStartSeconds(section.startSeconds);
@@ -274,8 +266,7 @@ function App() {
   };
 
   const clearSection = () => {
-    setIsRepeating(false);
-    setActiveSectionIndex(null);
+    setActiveSectionId(0);
     setTempStartHours(0);
     setTempStartMinutes(0);
     setTempStartSeconds(0);
@@ -285,32 +276,33 @@ function App() {
     setNote('');
   };
 
-  const deleteSection = (index: number) => {
+  const deleteSection = (id: number) => {
     if (window.confirm('Delete this section?')) {
       const existingSections = JSON.parse(
         localStorage.getItem(videoId) || '[]',
       );
-      existingSections.splice(index, 1);
-      if (existingSections.length === 0) {
-        const existingVideos = JSON.parse(
-          localStorage.getItem('videos') || '[]',
-        );
-        const updatedVideos = existingVideos.filter(
-          (video: { videoId: string }) => video.videoId !== videoId,
-        );
-        localStorage.setItem('videos', JSON.stringify(updatedVideos));
-        setVideos(updatedVideos);
-        localStorage.removeItem(videoId);
-        clearSection();
-      } else {
-        localStorage.setItem(videoId, JSON.stringify(existingSections));
-        if (activeSectionIndex === index) {
+      const sectionIndex = existingSections.findIndex((s: { id: number; }) => s.id === id);
+      if (sectionIndex !== -1) {
+        existingSections.splice(sectionIndex, 1);
+        if (existingSections.length === 0) {
+          const existingVideos = JSON.parse(
+            localStorage.getItem('videos') || '[]',
+          );
+          const updatedVideos = existingVideos.filter(
+            (video: { videoId: string }) => video.videoId !== videoId,
+          );
+          localStorage.setItem('videos', JSON.stringify(updatedVideos));
+          setVideos(updatedVideos);
+          localStorage.removeItem(videoId);
           clearSection();
-        } else if (activeSectionIndex !== null && activeSectionIndex > index) {
-          setActiveSectionIndex(activeSectionIndex - 1);
+        } else {
+          localStorage.setItem(videoId, JSON.stringify(existingSections));
+          if (activeSectionId === id) {
+            clearSection();
+          }
         }
+        setSections(existingSections);
       }
-      setSections(existingSections);
     }
   };
 
@@ -325,12 +317,11 @@ function App() {
       endSeconds: number;
       note: string;
     },
-    index: number,
   ) => {
-    if (activeSectionIndex === index) {
+    if (activeSectionId === section.id) {
       clearSection();
     } else {
-      seekSection(section, index);
+      seekSection(section);
     }
   };
 
@@ -399,11 +390,13 @@ function App() {
             <div className="mt-5">
               <hr className="my-2 border-gray-300" />
               <h2 className="mt-5 text-sm font-bold">Sections</h2>
-              {sections.map((section, index) => (
+              {sections.map((section) => (
                 <div
-                  key={index}
-                  className={`p-2 flex items-center rounded ${activeSectionIndex === index ? 'bg-gray-100' : ''}`}
-                  onClick={() => handleClickSection(section, index)}
+                  key={section.id}
+                  className={`p-2 flex items-center rounded ${
+                    activeSectionId === section.id ? 'bg-gray-100' : ''
+                  }`}
+                  onClick={() => handleClickSection(section)}
                 >
                   <div className="flex-1 overflow-hidden">
                     <div className="text-sm">
@@ -423,7 +416,7 @@ function App() {
                     type={'button'}
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteSection(index);
+                      deleteSection(section.id);
                     }}
                     className="p-2 border rounded border-gray-300 bg-white"
                   >
@@ -554,7 +547,7 @@ function App() {
                   onClick={() => saveSection()}
                   className="p-2 w-full rounded bg-black text-white disabled:bg-gray-600 disabled:text-gray-400"
                 >
-                  {activeSectionIndex !== null
+                  {activeSectionId !== 0
                     ? 'Update Section'
                     : 'Add Section'}
                 </button>
