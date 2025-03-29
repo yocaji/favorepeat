@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
-import { FaRegTrashAlt } from 'react-icons/fa';
-import { FaHeart, FaRepeat } from "react-icons/fa6";
-import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {FaRegTrashAlt} from 'react-icons/fa';
+import {FaHeart, FaRepeat} from "react-icons/fa6";
+import YouTube, {type YouTubePlayer, type YouTubeProps} from 'react-youtube';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -46,15 +46,19 @@ function App() {
   };
 
   const updateOpts = useCallback(() => {
-    const currentTime = playerRef.current?.getCurrentTime();
+    let start;
+    if (!videoId) {
+      start = undefined;
+    } else if (activeSectionId === 0) {
+      start = playerRef.current?.getCurrentTime();
+    } else {
+      start = startHours * 3600 + startMinutes * 60 + startSeconds;
+    }
+
     setOpts({
       playerVars: {
         autoplay: activeSectionId > 0 ? 1 : 0,
-        start: !videoId
-          ? undefined
-          : activeSectionId > 0
-            ? startHours * 3600 + startMinutes * 60 + startSeconds
-            : currentTime,
+        start: start,
         end:
           activeSectionId > 0
             ? endHours * 3600 + endMinutes * 60 + endSeconds
@@ -156,8 +160,6 @@ function App() {
     const videoId = extractVideoId(input);
     const title: string = await fetchVideoTitle(videoId);
     setVideoTitle(title);
-    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    setSections(storedSections);
     setVideoId(videoId);
     setTempVideoId('');
   };
