@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { FaRegTrashAlt } from 'react-icons/fa';
+import { FaHeart, FaRepeat } from "react-icons/fa6";
 import YouTube, { type YouTubeProps, type YouTubePlayer } from 'react-youtube';
 
 function App() {
@@ -349,14 +350,18 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className={'flex flex-col items-center min-h-screen'}>
       {!videoId && (
-        <h1 className="text-center text-xl font-bold">BY THE REPEAT</h1>
+        <h1 className={'flex items-center mt-4'}>
+          <FaHeart className={'text-xl text-rose-600'}/>
+          <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
+          <FaRepeat className={'text-xl text-cyan-600'}/>
+        </h1>
       )}
       {videoId && (
         <div
-          className="w-full h-full relative"
-          style={{ maxWidth: '448px', maxHeight: '252px' }}
+          className={'w-full h-full relative'}
+          style={{maxWidth: '448px', maxHeight: '252px'}}
         >
           <YouTube
             videoId={videoId}
@@ -366,45 +371,45 @@ function App() {
           />
         </div>
       )}
-      <div className="m-4 px-3 w-full max-w-md">
+      <div className={'m-4 px-3 w-full max-w-md'}>
         {!videoId && videos.length > 0 && (
           <div>
-            <h2 className="text-sm font-bold">Stored Videos</h2>
-            <div className="flex-col space-y-2">
+            <h2 className={'text-sm font-bold'}>Select video</h2>
+            <div className={'flex-col space-y-2'}>
               {videos.map((video) => (
                 <button
                   type={'button'}
                   key={video.videoId}
-                  className="card"
+                  className={'card'}
                   onClick={() =>
                     handleStoredVideoClick(video.videoId, video.videoTitle)
                   }
                 >
-                  <div className="truncate">{video.videoTitle}</div>
-                  <div className="text-xs text-gray-600">{video.videoId}</div>
+                  <div className={'truncate'}>{video.videoTitle}</div>
+                  <div className={'text-xs text-gray-600'}>{video.videoId}</div>
                 </button>
               ))}
             </div>
-            <hr className="my-4 border-gray-300" />
+            <hr className={'my-4 border-gray-300'}/>
           </div>
         )}
         {!videoId && (
           <div>
-            <label htmlFor="videoId" className="text-sm font-bold">
+            <label htmlFor="videoId" className={'text-sm font-bold'}>
               Video ID or URL
             </label>
-            <div className="flex items-center">
+            <div className={'flex items-center'}>
               <input
                 id="videoId"
                 type="text"
                 value={tempVideoId}
                 onChange={(e) => setTempVideoId(e.target.value)}
-                className="textbox w-full"
+                className={'textbox w-full'}
               />
               <button
                 type={'button'}
                 onClick={() => handleLoadVideo(tempVideoId)}
-                className="ml-2 btn btn-primary"
+                className={'ml-2 btn btn-primary'}
               >
                 Load
               </button>
@@ -412,9 +417,9 @@ function App() {
           </div>
         )}
         {videoId && sections.length > 0 && (
-          <div className="mt-2">
-            <h2 className="text-sm font-bold">Sections</h2>
-            <div className="flex-col items-center space-y-2">
+          <div className={'mt-2'}>
+            <h2 className={'text-sm font-bold'}>Select section</h2>
+            <div className={'flex-col items-center space-y-2'}>
               {sections.map((section) => (
                 <div
                   key={section.id}
@@ -423,9 +428,9 @@ function App() {
                   }`}
                   onClick={() => handleClickSection(section)}
                 >
-                  <div className="flex justify-between text-sm">
+                  <div className={'flex justify-between text-sm'}>
                     <div>
-                      <span className="font-bold mr-2">{section.id}</span>
+                      <span className={'font-bold mr-2'}>{section.id}</span>
                       {section.startHours}:{formatSeconds(section.startMinutes)}
                       :{formatSeconds(section.startSeconds)}-{section.endHours}:
                       {formatSeconds(section.endMinutes)}:
@@ -437,27 +442,27 @@ function App() {
                         e.stopPropagation();
                         deleteSection(section.id);
                       }}
-                      className="text-slate-800 hover:text-slate-500 active:text-slate-500"
+                      className={'hover:text-slate-500 active:text-slate-500'}
                     >
-                      <span className="sr-only">Delete</span>
-                      <FaRegTrashAlt />
+                      <span className={'sr-only'}>Delete</span>
+                      <FaRegTrashAlt/>
                     </button>
                   </div>
-                  <div className="text-xs text-gray-600 truncate">
+                  <div className={'text-xs text-gray-600 truncate'}>
                     {section.note}
                   </div>
                 </div>
               ))}
             </div>
-            <hr className="my-4 border-gray-300" />
+            <hr className={'my-4 border-gray-300'}/>
           </div>
         )}
         {videoId && (
           <>
-            <div className="block">
-              <span className="text-sm font-bold">Start from</span>
-              <div className="flex items-center">
-                <label htmlFor="startHours" className="sr-only">
+            <div className={'block'}>
+              <span className={'text-sm font-bold'}>Start from</span>
+              <div className={'flex items-center'}>
+                <label htmlFor="startHours" className={'sr-only'}>
                   Start Hours
                 </label>
                 <input
@@ -465,10 +470,10 @@ function App() {
                   type="tel"
                   value={tempStartHours}
                   onChange={(e) => setTempStartHours(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
-                <span className="mx-1">:</span>
-                <label htmlFor="startMinutes" className="sr-only">
+                <span className={'mx-1'}>:</span>
+                <label htmlFor="startMinutes" className={'sr-only'}>
                   Start Minutes
                 </label>
                 <input
@@ -476,10 +481,10 @@ function App() {
                   type="tel"
                   value={formatSeconds(tempStartMinutes)}
                   onChange={(e) => setTempStartMinutes(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
-                <span className="mx-1">:</span>
-                <label htmlFor="startSeconds" className="sr-only">
+                <span className={'mx-1'}>:</span>
+                <label htmlFor="startSeconds" className={'sr-only'}>
                   Start Seconds
                 </label>
                 <input
@@ -487,7 +492,7 @@ function App() {
                   type="tel"
                   value={formatSeconds(tempStartSeconds)}
                   onChange={(e) => setTempStartSeconds(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
                 <button
                   type={'button'}
@@ -498,16 +503,16 @@ function App() {
                       setTempStartSeconds,
                     )
                   }
-                  className="ml-2 btn btn-secondary"
+                  className={'ml-2 btn btn-secondary'}
                 >
                   Now
                 </button>
               </div>
             </div>
-            <div className="block mt-2">
-              <span className="text-sm font-bold">End at</span>
-              <div className="flex items-center">
-                <label htmlFor="endHours" className="sr-only">
+            <div className={'block mt-2'}>
+              <span className={'text-sm font-bold'}>End at</span>
+              <div className={'flex items-center'}>
+                <label htmlFor="endHours" className={'sr-only'}>
                   End Hours
                 </label>
                 <input
@@ -515,10 +520,10 @@ function App() {
                   type="tel"
                   value={tempEndHours}
                   onChange={(e) => setTempEndHours(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
-                <span className="mx-1">:</span>
-                <label htmlFor="endMinutes" className="sr-only">
+                <span className={'mx-1'}>:</span>
+                <label htmlFor="endMinutes" className={'sr-only'}>
                   End Minutes
                 </label>
                 <input
@@ -526,10 +531,10 @@ function App() {
                   type="tel"
                   value={formatSeconds(tempEndMinutes)}
                   onChange={(e) => setTempEndMinutes(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
-                <span className="mx-1">:</span>
-                <label htmlFor="endSeconds" className="sr-only">
+                <span className={'mx-1'}>:</span>
+                <label htmlFor="endSeconds" className={'sr-only'}>
                   End Seconds
                 </label>
                 <input
@@ -537,7 +542,7 @@ function App() {
                   type="tel"
                   value={formatSeconds(tempEndSeconds)}
                   onChange={(e) => setTempEndSeconds(Number(e.target.value))}
-                  className="w-full textbox"
+                  className={'w-full textbox'}
                 />
                 <button
                   type={'button'}
@@ -548,42 +553,45 @@ function App() {
                       setTempEndSeconds,
                     )
                   }
-                  className="ml-2 btn btn-secondary"
+                  className={'ml-2 btn btn-secondary'}
                 >
                   Now
                 </button>
               </div>
             </div>
-            <div className="block mt-2">
-              <span className="text-sm font-bold">Note</span>
+            <div className={'block mt-2'}>
+              <span className={'text-sm font-bold'}>Note</span>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="w-full textbox"
+                className={'w-full textbox'}
               />
             </div>
             <button
               type={'button'}
               onClick={() => saveSection()}
-              className="mt-4 w-full btn btn-primary"
+              className={'mt-4 w-full btn btn-primary'}
             >
-              {activeSectionId !== 0 ? 'Update Section' : 'Add Section'}
+              {activeSectionId !== 0 ? 'Update section' : 'Add section'}
             </button>
           </>
         )}
         {videoId && (
           <>
-            <hr className="my-4 border-gray-300" />
+            <hr className={'my-4 border-gray-300'}/>
             <button
               type={'button'}
               onClick={handleClearVideo}
-              className="w-full flex items-center justify-center btn btn-secondary"
+              className={'w-full flex items-center justify-center btn btn-secondary'}
             >
               Close this video
             </button>
           </>
         )}
       </div>
+      <footer className={'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'}>
+        <div className={'text-xs'}>FAVOREPEAT©</div>
+      </footer>
     </div>
   );
 }
