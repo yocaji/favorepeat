@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {FaRegTrashAlt} from 'react-icons/fa';
-import {FaHeart, FaRepeat} from "react-icons/fa6";
-import YouTube, {type YouTubePlayer, type YouTubeProps} from 'react-youtube';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FaRegTrashAlt } from 'react-icons/fa';
+import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
+import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -355,15 +355,15 @@ function App() {
     <div className={'flex flex-col items-center min-h-screen'}>
       {!videoId && (
         <h1 className={'flex items-center mt-4'}>
-          <FaHeart className={'text-xl text-rose-600'}/>
+          <FaHeart className={'text-xl text-rose-600'} />
           <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
-          <FaRepeat className={'text-xl text-cyan-600'}/>
+          <FaRepeat className={'text-xl text-cyan-600'} />
         </h1>
       )}
       {videoId && (
         <div
           className={'w-full h-full relative'}
-          style={{maxWidth: '448px', maxHeight: '252px'}}
+          style={{ maxWidth: '448px', maxHeight: '252px' }}
         >
           <YouTube
             videoId={videoId}
@@ -377,26 +377,29 @@ function App() {
         {!videoId && videos.length > 0 && (
           <div>
             <h2 className={'text-sm font-bold'}>Select video</h2>
-            <div className={'flex-col space-y-2'}>
+            <ul
+              className={
+                'divide-y divide-gray-200 rounded border border-gray-300'
+              }
+              role={'list'}
+            >
               {videos.map((video) => (
-                <button
-                  type={'button'}
+                <li
                   key={video.videoId}
-                  className={'card'}
+                  className={'p-3 flex items-center space-x-1 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'}
                   onClick={() =>
                     handleStoredVideoClick(video.videoId, video.videoTitle)
                   }
                 >
                   <div className={'truncate'}>{video.videoTitle}</div>
-                  <div className={'text-xs text-gray-600'}>{video.videoId}</div>
-                </button>
+                  <FaAngleRight className={'text-slate-400'} />
+                </li>
               ))}
-            </div>
-            <hr className={'my-4 border-gray-300'}/>
+            </ul>
           </div>
         )}
         {!videoId && (
-          <div>
+          <div className={'mt-4'}>
             <label htmlFor="videoId" className={'text-sm font-bold'}>
               Video ID or URL
             </label>
@@ -426,13 +429,14 @@ function App() {
                 <div
                   key={section.id}
                   className={`flex-col card ${
-                    activeSectionId === section.id ? 'bg-slate-200' : ''
+                    activeSectionId === section.id
+                      ? 'bg-sky-100 border-sky-200 border-3'
+                      : ''
                   }`}
                   onClick={() => handleClickSection(section)}
                 >
-                  <div className={'flex justify-between text-sm'}>
-                    <div>
-                      <span className={'font-bold mr-2'}>{section.id}</span>
+                  <div className={'flex justify-between'}>
+                    <div className={'text-md'}>
                       {section.startHours}:{formatSeconds(section.startMinutes)}
                       :{formatSeconds(section.startSeconds)}-{section.endHours}:
                       {formatSeconds(section.endMinutes)}:
@@ -447,16 +451,16 @@ function App() {
                       className={'hover:text-slate-500 active:text-slate-500'}
                     >
                       <span className={'sr-only'}>Delete</span>
-                      <FaRegTrashAlt/>
+                      <FaRegTrashAlt />
                     </button>
                   </div>
-                  <div className={'text-xs text-gray-600 truncate'}>
+                  <div className={'text-sm text-gray-600 truncate'}>
                     {section.note}
                   </div>
                 </div>
               ))}
             </div>
-            <hr className={'my-4 border-gray-300'}/>
+            <hr className={'my-4 border-gray-300'} />
           </div>
         )}
         {videoId && (
@@ -580,19 +584,25 @@ function App() {
         )}
         {videoId && (
           <>
-            <hr className={'my-4 border-gray-300'}/>
+            <hr className={'my-4 border-gray-300'} />
             <button
               type={'button'}
               onClick={handleClearVideo}
-              className={'w-full flex items-center justify-center btn btn-secondary'}
+              className={
+                'w-full flex items-center justify-center btn btn-secondary'
+              }
             >
               Close this video
             </button>
           </>
         )}
       </div>
-      <footer className={'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'}>
-        <div className={'text-xs'}>FAVOREPEAT©</div>
+      <footer
+        className={
+          'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'
+        }
+      >
+        <div className={'text-xs'}>©FAVOREPEAT</div>
       </footer>
     </div>
   );
