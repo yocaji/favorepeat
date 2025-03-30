@@ -6,12 +6,6 @@ import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
-  const [startHours, setStartHours] = useState(0);
-  const [startMinutes, setStartMinutes] = useState(0);
-  const [startSeconds, setStartSeconds] = useState(0);
-  const [endHours, setEndHours] = useState(0);
-  const [endMinutes, setEndMinutes] = useState(0);
-  const [endSeconds, setEndSeconds] = useState(0);
   const [videoId, setVideoId] = useState('');
   const [tempVideoId, setTempVideoId] = useState('');
   const [videoHeight, setVideoHeight] = useState('auto');
@@ -22,24 +16,18 @@ function App() {
   const [sections, setSections] = useState<
     {
       id: number;
-      startHours: number;
-      startMinutes: number;
-      startSeconds: number;
-      endHours: number;
-      endMinutes: number;
-      endSeconds: number;
+      startTime: string;
+      endTime: string;
       note: string;
     }[]
   >([]);
-  const [tempStartHours, setTempStartHours] = useState(0);
-  const [tempStartMinutes, setTempStartMinutes] = useState(0);
-  const [tempStartSeconds, setTempStartSeconds] = useState(0);
-  const [tempEndHours, setTempEndHours] = useState(0);
-  const [tempEndMinutes, setTempEndMinutes] = useState(0);
-  const [tempEndSeconds, setTempEndSeconds] = useState(0);
   const [activeSectionId, setActiveSectionId] = useState<number>(0);
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
+  const [startTime, setStartTime] = useState('00:00:00');
+  const [endTime, setEndTime] = useState('00:00:00');
+  const [startSeconds, setStartSeconds] = useState(0);
+  const [endSeconds, setEndSeconds] = useState(0);
 
   const formatSeconds = (seconds: number) => {
     return seconds.toString().padStart(2, '0');
@@ -52,17 +40,14 @@ function App() {
     } else if (activeSectionId === 0) {
       start = playerRef.current?.getCurrentTime();
     } else {
-      start = startHours * 3600 + startMinutes * 60 + startSeconds;
+      start = startSeconds;
     }
 
     setOpts({
       playerVars: {
         autoplay: activeSectionId > 0 ? 1 : 0,
         start: start,
-        end:
-          activeSectionId > 0
-            ? endHours * 3600 + endMinutes * 60 + endSeconds
-            : undefined,
+        end: activeSectionId > 0 ? endSeconds : undefined,
       },
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
@@ -70,11 +55,7 @@ function App() {
   }, [
     videoId,
     activeSectionId,
-    startHours,
-    startMinutes,
     startSeconds,
-    endHours,
-    endMinutes,
     endSeconds,
     videoHeight,
   ]);
@@ -108,6 +89,18 @@ function App() {
     setSections(storedSections);
   }, [videoId]);
 
+  useEffect(() => {
+    const [hours, minutes, seconds] = startTime.split(':').map(Number);
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    setStartSeconds(totalSeconds);
+  }, [startTime]);
+
+  useEffect(() => {
+    const [hours, minutes, seconds] = endTime.split(':').map(Number);
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    setEndSeconds(totalSeconds);
+  }, [endTime]);
+
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
   };
@@ -116,7 +109,7 @@ function App() {
     if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
       if (activeSectionId > 0) {
         playerRef.current
-          .seekTo(startHours * 3600 + startMinutes * 60 + startSeconds, true)
+          .seekTo(startSeconds, true)
           .catch((error) => {
             console.error('Error seeking to start:', error);
           });
@@ -179,33 +172,22 @@ function App() {
   const handleClearVideo = () => {
     setActiveSectionId(0);
     setVideoId('');
-    setStartHours(0);
-    setStartMinutes(0);
-    setStartSeconds(0);
-    setEndHours(0);
-    setEndMinutes(0);
-    setEndSeconds(0);
-    setTempStartHours(0);
-    setTempStartMinutes(0);
-    setTempStartSeconds(0);
-    setTempEndHours(0);
-    setTempEndMinutes(0);
-    setTempEndSeconds(0);
+    setStartTime('00:00:00');
+    setEndTime('00:00:00');
     setNote('');
     const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
     setVideos(storedVideos);
   };
 
   const setTimeToCurrent = async (
-    setHours: React.Dispatch<React.SetStateAction<number>>,
-    setMinutes: React.Dispatch<React.SetStateAction<number>>,
-    setSeconds: React.Dispatch<React.SetStateAction<number>>,
+    setTime: React.Dispatch<React.SetStateAction<string>>
   ): Promise<void> => {
     if (playerRef.current) {
       const currentTime = await playerRef.current.getCurrentTime();
-      setHours(Math.floor(currentTime / 3600));
-      setMinutes(Math.floor((currentTime % 3600) / 60));
-      setSeconds(Math.floor(currentTime % 60));
+      const hours = Math.floor(currentTime / 3600);
+      const minutes = Math.floor((currentTime % 3600) / 60);
+      const seconds = Math.floor(currentTime % 60);
+      setTime(`${hours}:${formatSeconds(minutes)}:${formatSeconds(seconds)}`);
     }
   };
 
@@ -217,12 +199,8 @@ function App() {
             ? sections[sections.length - 1].id + 1
             : 1
           : sections.find((s) => s.id === activeSectionId)?.id,
-      startHours: tempStartHours,
-      startMinutes: tempStartMinutes,
-      startSeconds: tempStartSeconds,
-      endHours: tempEndHours,
-      endMinutes: tempEndMinutes,
-      endSeconds: tempEndSeconds,
+      startTime,
+      endTime,
       note: note,
     };
 
@@ -253,52 +231,22 @@ function App() {
     }
   };
 
-  const setSection = (section: {
-    id: number;
-    startHours: number;
-    startMinutes: number;
-    startSeconds: number;
-    endHours: number;
-    endMinutes: number;
-    endSeconds: number;
-  }) => {
-    setStartHours(section.startHours);
-    setStartMinutes(section.startMinutes);
-    setStartSeconds(section.startSeconds);
-    setEndHours(section.endHours);
-    setEndMinutes(section.endMinutes);
-    setEndSeconds(section.endSeconds);
-  };
-
   const seekSection = (section: {
     id: number;
-    startHours: number;
-    startMinutes: number;
-    startSeconds: number;
-    endHours: number;
-    endMinutes: number;
-    endSeconds: number;
+    startTime: string;
+    endTime: string;
     note: string;
   }) => {
-    setSection(section);
     setActiveSectionId(section.id);
-    setTempStartHours(section.startHours);
-    setTempStartMinutes(section.startMinutes);
-    setTempStartSeconds(section.startSeconds);
-    setTempEndHours(section.endHours);
-    setTempEndMinutes(section.endMinutes);
-    setTempEndSeconds(section.endSeconds);
+    setStartTime(section.startTime);
+    setEndTime(section.endTime);
     setNote(section.note);
   };
 
   const clearSection = () => {
     setActiveSectionId(0);
-    setTempStartHours(0);
-    setTempStartMinutes(0);
-    setTempStartSeconds(0);
-    setTempEndHours(0);
-    setTempEndMinutes(0);
-    setTempEndSeconds(0);
+    setStartTime('00:00:00');
+    setEndTime('00:00:00');
     setNote('');
   };
 
@@ -336,12 +284,8 @@ function App() {
 
   const handleClickSection = (section: {
     id: number;
-    startHours: number;
-    startMinutes: number;
-    startSeconds: number;
-    endHours: number;
-    endMinutes: number;
-    endSeconds: number;
+    startTime: string;
+    endTime: string;
     note: string;
   }) => {
     if (activeSectionId === section.id) {
@@ -352,7 +296,7 @@ function App() {
   };
 
   return (
-    <div className={'flex flex-col items-center min-h-screen'}>
+    <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
         <h1 className={'flex items-center mt-4'}>
           <FaHeart className={'text-xl text-rose-600'} />
@@ -386,7 +330,9 @@ function App() {
               {videos.map((video) => (
                 <li
                   key={video.videoId}
-                  className={'p-3 flex items-center space-x-1 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'}
+                  className={
+                    'p-3 flex items-center space-x-1 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
+                  }
                   onClick={() =>
                     handleStoredVideoClick(video.videoId, video.videoTitle)
                   }
@@ -437,10 +383,7 @@ function App() {
                 >
                   <div className={'flex justify-between'}>
                     <div className={'text-md'}>
-                      {section.startHours}:{formatSeconds(section.startMinutes)}
-                      :{formatSeconds(section.startSeconds)}-{section.endHours}:
-                      {formatSeconds(section.endMinutes)}:
-                      {formatSeconds(section.endSeconds)}
+                      {`${section.startTime} - ${section.endTime}`}
                     </div>
                     <button
                       type={'button'}
@@ -468,47 +411,20 @@ function App() {
             <div className={'block'}>
               <span className={'text-sm font-bold'}>Start from</span>
               <div className={'flex items-center'}>
-                <label htmlFor="startHours" className={'sr-only'}>
-                  Start Hours
+                <label htmlFor="startTime" className={'sr-only'}>
+                  Start Time
                 </label>
                 <input
-                  id="startHours"
-                  type="tel"
-                  value={tempStartHours}
-                  onChange={(e) => setTempStartHours(Number(e.target.value))}
-                  className={'w-full textbox'}
-                />
-                <span className={'mx-1'}>:</span>
-                <label htmlFor="startMinutes" className={'sr-only'}>
-                  Start Minutes
-                </label>
-                <input
-                  id="startMinutes"
-                  type="tel"
-                  value={formatSeconds(tempStartMinutes)}
-                  onChange={(e) => setTempStartMinutes(Number(e.target.value))}
-                  className={'w-full textbox'}
-                />
-                <span className={'mx-1'}>:</span>
-                <label htmlFor="startSeconds" className={'sr-only'}>
-                  Start Seconds
-                </label>
-                <input
-                  id="startSeconds"
-                  type="tel"
-                  value={formatSeconds(tempStartSeconds)}
-                  onChange={(e) => setTempStartSeconds(Number(e.target.value))}
+                  id={'startTime'}
+                  type={'time'}
+                  step={'1'}
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
                   className={'w-full textbox'}
                 />
                 <button
                   type={'button'}
-                  onClick={() =>
-                    setTimeToCurrent(
-                      setTempStartHours,
-                      setTempStartMinutes,
-                      setTempStartSeconds,
-                    )
-                  }
+                  onClick={() => setTimeToCurrent(setStartTime)}
                   className={'ml-2 btn btn-secondary'}
                 >
                   Now
@@ -518,47 +434,20 @@ function App() {
             <div className={'block mt-2'}>
               <span className={'text-sm font-bold'}>End at</span>
               <div className={'flex items-center'}>
-                <label htmlFor="endHours" className={'sr-only'}>
-                  End Hours
+                <label htmlFor="endTime" className={'sr-only'}>
+                  End Time
                 </label>
                 <input
-                  id="endHours"
-                  type="tel"
-                  value={tempEndHours}
-                  onChange={(e) => setTempEndHours(Number(e.target.value))}
-                  className={'w-full textbox'}
-                />
-                <span className={'mx-1'}>:</span>
-                <label htmlFor="endMinutes" className={'sr-only'}>
-                  End Minutes
-                </label>
-                <input
-                  id="endMinutes"
-                  type="tel"
-                  value={formatSeconds(tempEndMinutes)}
-                  onChange={(e) => setTempEndMinutes(Number(e.target.value))}
-                  className={'w-full textbox'}
-                />
-                <span className={'mx-1'}>:</span>
-                <label htmlFor="endSeconds" className={'sr-only'}>
-                  End Seconds
-                </label>
-                <input
-                  id="endSeconds"
-                  type="tel"
-                  value={formatSeconds(tempEndSeconds)}
-                  onChange={(e) => setTempEndSeconds(Number(e.target.value))}
+                  id={'endTime'}
+                  type={'time'}
+                  step={'1'}
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
                   className={'w-full textbox'}
                 />
                 <button
                   type={'button'}
-                  onClick={() =>
-                    setTimeToCurrent(
-                      setTempEndHours,
-                      setTempEndMinutes,
-                      setTempEndSeconds,
-                    )
-                  }
+                  onClick={() => setTimeToCurrent(setEndTime)}
                   className={'ml-2 btn btn-secondary'}
                 >
                   Now
