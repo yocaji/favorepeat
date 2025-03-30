@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
+import SectionForm from './SectionForm';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -33,12 +34,12 @@ function App() {
     return seconds.toString().padStart(2, '0');
   };
 
-  const updateOpts = useCallback(() => {
-    let start;
+  const updateOpts = useCallback(async () => {
+    let start: number | undefined;
     if (!videoId) {
       start = undefined;
     } else if (activeSectionId === 0) {
-      start = playerRef.current?.getCurrentTime();
+      start = await playerRef.current?.getCurrentTime();
     } else {
       start = startSeconds;
     }
@@ -52,13 +53,7 @@ function App() {
       width: '100%',
       height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
     });
-  }, [
-    videoId,
-    activeSectionId,
-    startSeconds,
-    endSeconds,
-    videoHeight,
-  ]);
+  }, [videoId, activeSectionId, startSeconds, endSeconds, videoHeight]);
 
   useEffect(() => {
     const updateVideoHeight = () => {
@@ -108,11 +103,9 @@ function App() {
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
     if (event.data === window.YT.PlayerState.ENDED && playerRef.current) {
       if (activeSectionId > 0) {
-        playerRef.current
-          .seekTo(startSeconds, true)
-          .catch((error) => {
-            console.error('Error seeking to start:', error);
-          });
+        playerRef.current.seekTo(startSeconds, true).catch((error) => {
+          console.error('Error seeking to start:', error);
+        });
       } else {
         playerRef.current.playVideo().catch((error) => {
           console.error('Error playing video:', error);
@@ -180,7 +173,7 @@ function App() {
   };
 
   const setTimeToCurrent = async (
-    setTime: React.Dispatch<React.SetStateAction<string>>
+    setTime: React.Dispatch<React.SetStateAction<string>>,
   ): Promise<void> => {
     if (playerRef.current) {
       const currentTime = await playerRef.current.getCurrentTime();
@@ -325,7 +318,6 @@ function App() {
               className={
                 'divide-y divide-gray-200 rounded border border-gray-300'
               }
-              role={'list'}
             >
               {videos.map((video) => (
                 <li
@@ -407,69 +399,17 @@ function App() {
           </div>
         )}
         {videoId && (
-          <>
-            <div className={'block'}>
-              <span className={'text-sm font-bold'}>Start from</span>
-              <div className={'flex items-center'}>
-                <label htmlFor="startTime" className={'sr-only'}>
-                  Start Time
-                </label>
-                <input
-                  id={'startTime'}
-                  type={'time'}
-                  step={'1'}
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className={'w-full textbox'}
-                />
-                <button
-                  type={'button'}
-                  onClick={() => setTimeToCurrent(setStartTime)}
-                  className={'ml-2 btn btn-secondary'}
-                >
-                  Now
-                </button>
-              </div>
-            </div>
-            <div className={'block mt-2'}>
-              <span className={'text-sm font-bold'}>End at</span>
-              <div className={'flex items-center'}>
-                <label htmlFor="endTime" className={'sr-only'}>
-                  End Time
-                </label>
-                <input
-                  id={'endTime'}
-                  type={'time'}
-                  step={'1'}
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className={'w-full textbox'}
-                />
-                <button
-                  type={'button'}
-                  onClick={() => setTimeToCurrent(setEndTime)}
-                  className={'ml-2 btn btn-secondary'}
-                >
-                  Now
-                </button>
-              </div>
-            </div>
-            <div className={'block mt-2'}>
-              <span className={'text-sm font-bold'}>Note</span>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className={'w-full textbox'}
-              />
-            </div>
-            <button
-              type={'button'}
-              onClick={() => saveSection()}
-              className={'mt-4 w-full btn btn-primary'}
-            >
-              {activeSectionId !== 0 ? 'Update section' : 'Add section'}
-            </button>
-          </>
+          <SectionForm
+            startTime={startTime}
+            setStartTime={setStartTime}
+            endTime={endTime}
+            setEndTime={setEndTime}
+            note={note}
+            setNote={setNote}
+            setTimeToCurrent={setTimeToCurrent}
+            saveSection={saveSection}
+            activeSectionId={activeSectionId}
+          />
         )}
         {videoId && (
           <>
@@ -491,7 +431,7 @@ function App() {
           'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'
         }
       >
-        <div className={'text-xs'}>©FAVOREPEAT</div>
+        <div className={'text-sm'}>©FAVOREPEAT</div>
       </footer>
     </div>
   );
