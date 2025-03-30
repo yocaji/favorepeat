@@ -1,14 +1,15 @@
-import type * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
-import SectionForm from './SectionForm';
+import SectionEditor from './SectionEditor.tsx';
+import CancelSectionButton from './CancelSectionButton.tsx';
+import SaveSectionButton from './SaveSectionButton.tsx';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
   const [videoId, setVideoId] = useState('');
-  const [tempVideoId, setTempVideoId] = useState('');
+  const [tempVideoId, setEditableVideoId] = useState('');
   const [videoHeight, setVideoHeight] = useState('auto');
   const [opts, setOpts] = useState({});
   const [videos, setVideos] = useState<
@@ -26,13 +27,12 @@ function App() {
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [startTime, setStartTime] = useState('00:00:00');
+  const [editableStartTime, setEditableStartTime] = useState('00:00:00');
   const [endTime, setEndTime] = useState('00:00:00');
+  const [editableEndTime, setEditableEndTime] = useState('00:00:00');
   const [startSeconds, setStartSeconds] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
-
-  const formatSeconds = (seconds: number) => {
-    return seconds.toString().padStart(2, '0');
-  };
+  const [displaySectionEditor, setDisplaySectionEditor] = useState(false);
 
   const updateOpts = useCallback(async () => {
     let start: number | undefined;
@@ -142,19 +142,19 @@ function App() {
     return match ? match[1] : input;
   };
 
-  const handleLoadVideo = async (input: string) => {
+  const handleClickLoadVideo = async (input: string) => {
     const videoId = extractVideoId(input);
     const title: string = await fetchVideoTitle(videoId);
     setVideoTitle(title);
     setVideoId(videoId);
-    setTempVideoId('');
+    setEditableVideoId('');
   };
 
-  const handleStoredVideoClick = async (
+  const handleClickStoredVideo = async (
     videoId: string,
     videoTitle: string,
   ) => {
-    setTempVideoId('');
+    setEditableVideoId('');
     setVideoId(videoId);
     setVideoTitle(videoTitle);
 
@@ -162,26 +162,11 @@ function App() {
     setSections(storedSections);
   };
 
-  const handleClearVideo = () => {
-    setActiveSectionId(0);
+  const handleClickClearVideo = () => {
     setVideoId('');
-    setStartTime('00:00:00');
-    setEndTime('00:00:00');
-    setNote('');
+    clearSection();
     const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
     setVideos(storedVideos);
-  };
-
-  const setTimeToCurrent = async (
-    setTime: React.Dispatch<React.SetStateAction<string>>,
-  ): Promise<void> => {
-    if (playerRef.current) {
-      const currentTime = await playerRef.current.getCurrentTime();
-      const hours = Math.floor(currentTime / 3600);
-      const minutes = Math.floor((currentTime % 3600) / 60);
-      const seconds = Math.floor(currentTime % 60);
-      setTime(`${hours}:${formatSeconds(minutes)}:${formatSeconds(seconds)}`);
-    }
   };
 
   const saveSection = async () => {
@@ -192,8 +177,8 @@ function App() {
             ? sections[sections.length - 1].id + 1
             : 1
           : sections.find((s) => s.id === activeSectionId)?.id,
-      startTime,
-      endTime,
+      startTime: editableStartTime,
+      endTime: editableEndTime,
       note: note,
     };
 
@@ -224,6 +209,10 @@ function App() {
     }
   };
 
+  const handleClickSaveSection = async () => {
+    await saveSection();
+  };
+
   const seekSection = (section: {
     id: number;
     startTime: string;
@@ -240,6 +229,8 @@ function App() {
     setActiveSectionId(0);
     setStartTime('00:00:00');
     setEndTime('00:00:00');
+    setEditableStartTime('00:00:00');
+    setEditableEndTime('00:00:00');
     setNote('');
   };
 
@@ -275,17 +266,27 @@ function App() {
     }
   };
 
+  const handleClickCancelSection = () => {
+    if (activeSectionId > 0) {
+      clearSection();
+    }
+    setDisplaySectionEditor(false);
+  };
+
   const handleClickSection = (section: {
     id: number;
     startTime: string;
     endTime: string;
     note: string;
   }) => {
-    if (activeSectionId === section.id) {
-      clearSection();
-    } else {
-      seekSection(section);
-    }
+    seekSection(section);
+    setEditableStartTime(section.startTime);
+    setEditableEndTime(section.endTime);
+    setDisplaySectionEditor(true);
+  };
+
+  const handleClickAddSection = () => {
+    setDisplaySectionEditor(true);
   };
 
   return (
@@ -326,7 +327,7 @@ function App() {
                     'p-3 flex items-center space-x-1 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
                   }
                   onClick={() =>
-                    handleStoredVideoClick(video.videoId, video.videoTitle)
+                    handleClickStoredVideo(video.videoId, video.videoTitle)
                   }
                 >
                   <div className={'truncate'}>{video.videoTitle}</div>
@@ -346,12 +347,12 @@ function App() {
                 id="videoId"
                 type="text"
                 value={tempVideoId}
-                onChange={(e) => setTempVideoId(e.target.value)}
+                onChange={(e) => setEditableVideoId(e.target.value)}
                 className={'textbox w-full'}
               />
               <button
                 type={'button'}
-                onClick={() => handleLoadVideo(tempVideoId)}
+                onClick={() => handleClickLoadVideo(tempVideoId)}
                 className={'ml-2 btn btn-primary'}
               >
                 Load
@@ -374,7 +375,7 @@ function App() {
                   onClick={() => handleClickSection(section)}
                 >
                   <div className={'flex justify-between'}>
-                    <div className={'text-md'}>
+                    <div className={'text-base'}>
                       {`${section.startTime} - ${section.endTime}`}
                     </div>
                     <button
@@ -395,28 +396,38 @@ function App() {
                 </div>
               ))}
             </div>
-            <hr className={'my-4 border-gray-300'} />
+            <button
+              type={'button'}
+              className={'mt-2 w-full btn btn-primary'}
+              onClick={handleClickAddSection}
+            >
+              Add section
+            </button>
           </div>
         )}
-        {videoId && (
-          <SectionForm
-            startTime={startTime}
-            setStartTime={setStartTime}
-            endTime={endTime}
-            setEndTime={setEndTime}
-            note={note}
-            setNote={setNote}
-            setTimeToCurrent={setTimeToCurrent}
-            saveSection={saveSection}
-            activeSectionId={activeSectionId}
-          />
+        {videoId && displaySectionEditor && (
+          <>
+            <SectionEditor
+              editableStartTime={editableStartTime}
+              setEditableStartTime={setEditableStartTime}
+              editableEndTime={editableEndTime}
+              setEditableEndTime={setEditableEndTime}
+              note={note}
+              setNote={setNote}
+              playerRef={playerRef}
+            />
+            <div className={'mt-4 w-full flex justify-between space-x-2'}>
+              <CancelSectionButton onClick={handleClickCancelSection} />
+              <SaveSectionButton onClick={handleClickSaveSection} />
+            </div>
+          </>
         )}
         {videoId && (
           <>
-            <hr className={'my-4 border-gray-300'} />
+            <hr className={'my-4 border-gray-300'}/>
             <button
               type={'button'}
-              onClick={handleClearVideo}
+              onClick={handleClickClearVideo}
               className={
                 'w-full flex items-center justify-center btn btn-secondary'
               }
