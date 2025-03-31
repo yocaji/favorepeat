@@ -1,14 +1,14 @@
-import React from 'react';
+import type React from 'react';
 import type { YouTubePlayer } from 'react-youtube';
 
 interface SectionFormProps {
-  note: string;
-  setNote: React.Dispatch<React.SetStateAction<string>>;
   playerRef: React.RefObject<YouTubePlayer | null>;
   editableStartTime: string;
   setEditableStartTime: React.Dispatch<React.SetStateAction<string>>;
   editableEndTime: string;
   setEditableEndTime: React.Dispatch<React.SetStateAction<string>>;
+  editableNote: string;
+  setEditableNote: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const padToTwoDigits = (seconds: number) => {
@@ -31,8 +31,8 @@ const setTimeToCurrent = async (
 };
 
 const SectionEditor: React.FC<SectionFormProps> = ({
-  note,
-  setNote,
+  editableNote,
+  setEditableNote,
   playerRef,
   editableStartTime,
   setEditableStartTime,
@@ -92,8 +92,8 @@ const SectionEditor: React.FC<SectionFormProps> = ({
       <div className={'block mt-2'}>
         <span className={'text-sm font-bold'}>Note</span>
         <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
+          value={editableNote}
+          onChange={(e) => setEditableNote(e.target.value)}
           className={'w-full textbox'}
         />
       </div>
