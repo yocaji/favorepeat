@@ -1,14 +1,14 @@
-import type * as React from 'react';
+import React from 'react';
 import type { YouTubePlayer } from 'react-youtube';
 
 interface SectionFormProps {
+  note: string;
+  setNote: React.Dispatch<React.SetStateAction<string>>;
+  playerRef: React.RefObject<YouTubePlayer | null>;
   editableStartTime: string;
   setEditableStartTime: React.Dispatch<React.SetStateAction<string>>;
   editableEndTime: string;
   setEditableEndTime: React.Dispatch<React.SetStateAction<string>>;
-  note: string;
-  setNote: React.Dispatch<React.SetStateAction<string>>;
-  playerRef: React.RefObject<YouTubePlayer | null>;
 }
 
 const padToTwoDigits = (seconds: number) => {
@@ -31,13 +31,13 @@ const setTimeToCurrent = async (
 };
 
 const SectionEditor: React.FC<SectionFormProps> = ({
+  note,
+  setNote,
+  playerRef,
   editableStartTime,
   setEditableStartTime,
   editableEndTime,
   setEditableEndTime,
-  note,
-  setNote,
-  playerRef,
 }) => {
   return (
     <>
@@ -56,14 +56,14 @@ const SectionEditor: React.FC<SectionFormProps> = ({
               onChange={(e) => setEditableStartTime(e.target.value)}
               className={'w-full textbox text-lg'}
             />
-            <button
-              type={'button'}
-              onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
-              className={'ml-2 btn btn-secondary'}
-            >
-              Now
-            </button>
           </div>
+          <button
+            type={'button'}
+            onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
+            className={'mt-2 btn btn-secondary w-full'}
+          >
+            Now
+          </button>
         </div>
         <div className={'block w-1/2 ml-2'}>
           <span className={'text-sm font-bold'}>End at</span>
@@ -79,14 +79,14 @@ const SectionEditor: React.FC<SectionFormProps> = ({
               onChange={(e) => setEditableEndTime(e.target.value)}
               className={'w-full textbox text-lg'}
             />
-            <button
-              type={'button'}
-              onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
-              className={'ml-2 btn btn-secondary'}
-            >
-              Now
-            </button>
           </div>
+          <button
+            type={'button'}
+            onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
+            className={'mt-2 btn btn-secondary w-full'}
+          >
+            Now
+          </button>
         </div>
       </div>
       <div className={'block mt-2'}>

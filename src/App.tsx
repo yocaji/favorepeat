@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaRegTrashAlt } from 'react-icons/fa';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import SectionEditor from './SectionEditor.tsx';
 import CancelSectionButton from './CancelSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
+import DeleteSectionButton from './DeleteSectionButton.tsx';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -27,12 +27,12 @@ function App() {
   const [note, setNote] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [startTime, setStartTime] = useState('00:00:00');
-  const [editableStartTime, setEditableStartTime] = useState('00:00:00');
   const [endTime, setEndTime] = useState('00:00:00');
-  const [editableEndTime, setEditableEndTime] = useState('00:00:00');
   const [startSeconds, setStartSeconds] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
-  const [displaySectionEditor, setDisplaySectionEditor] = useState(false);
+  const [expandedSectionId, setExpandedSectionId] = useState<number | null>(null);
+  const [editableStartTime, setEditableStartTime] = useState('00:00:00');
+  const [editableEndTime, setEditableEndTime] = useState('00:00:00');
 
   const updateOpts = useCallback(async () => {
     let start: number | undefined;
@@ -169,49 +169,55 @@ function App() {
     setVideos(storedVideos);
   };
 
-  const saveSection = async () => {
+  const createSection = async () => {
     const section = {
-      id:
-        activeSectionId === 0
-          ? sections.length > 0
-            ? sections[sections.length - 1].id + 1
-            : 1
-          : sections.find((s) => s.id === activeSectionId)?.id,
+      id: sections.length > 0 ? sections[sections.length - 1].id + 1 : 1,
       startTime: editableStartTime,
       endTime: editableEndTime,
       note: note,
     };
 
     const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
-    if (activeSectionId === 0) {
-      storedData.push(section);
-    } else {
-      const sectionIndex = storedData.findIndex(
-        (s: { id: number }) => s.id === activeSectionId,
-      );
-      if (sectionIndex !== -1) {
-        storedData[sectionIndex] = section;
-      }
-    }
+    storedData.push(section);
     localStorage.setItem(videoId, JSON.stringify(storedData));
     setSections(storedData);
     seekSection(storedData[storedData.length - 1]);
+    setExpandedSectionId(section.id);
 
     const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
     const videoEntry = { videoId, videoTitle };
-    if (
-      !existingVideos.some(
-        (video: { videoId: string }) => video.videoId === videoId,
-      )
-    ) {
+    if (!existingVideos.some((video: { videoId: string }) => video.videoId === videoId)) {
       existingVideos.push(videoEntry);
       localStorage.setItem('videos', JSON.stringify(existingVideos));
     }
   };
 
-  const handleClickSaveSection = async () => {
-    await saveSection();
+  const updateSection = async () => {
+    const section = {
+      id: sections.find((s) => s.id === activeSectionId)?.id,
+      startTime: editableStartTime,
+      endTime: editableEndTime,
+      note: note,
+    };
+
+    const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
+    const sectionIndex = storedData.findIndex((s: { id: number }) => s.id === expandedSectionId);
+    if (sectionIndex > -1) storedData[sectionIndex] = section;
+    localStorage.setItem(videoId, JSON.stringify(storedData));
+    setSections(storedData);
+    if (activeSectionId === expandedSectionId) {
+      seekSection(storedData[storedData.length - 1]);
+    }
   };
+
+  const handleClickUpdateSection = async () => {
+    await updateSection();
+  };
+
+  const handleClickCreateSection = async () => {
+    await createSection();
+    clearSectionEditor();
+  }
 
   const seekSection = (section: {
     id: number;
@@ -226,22 +232,28 @@ function App() {
   };
 
   const clearSection = () => {
-    setActiveSectionId(0);
     setStartTime('00:00:00');
     setEndTime('00:00:00');
+    setActiveSectionId(0);
+    setExpandedSectionId(0);
+  };
+
+  const clearSectionEditor = () => {
     setEditableStartTime('00:00:00');
     setEditableEndTime('00:00:00');
     setNote('');
-  };
+  }
 
-  const deleteSection = (id: number) => {
+  const deleteSection = () => {
     if (window.confirm('Delete this section?')) {
       const existingSections = JSON.parse(
         localStorage.getItem(videoId) || '[]',
       );
+
       const sectionIndex = existingSections.findIndex(
-        (s: { id: number }) => s.id === id,
+        (s: { id: number }) => s.id === activeSectionId,
       );
+
       if (sectionIndex !== -1) {
         existingSections.splice(sectionIndex, 1);
         if (existingSections.length === 0) {
@@ -254,26 +266,16 @@ function App() {
           localStorage.setItem('videos', JSON.stringify(updatedVideos));
           setVideos(updatedVideos);
           localStorage.removeItem(videoId);
-          clearSection();
         } else {
           localStorage.setItem(videoId, JSON.stringify(existingSections));
-          if (activeSectionId === id) {
-            clearSection();
-          }
         }
+        clearSection();
         setSections(existingSections);
       }
     }
   };
 
-  const handleClickCancelSection = () => {
-    if (activeSectionId > 0) {
-      clearSection();
-    }
-    setDisplaySectionEditor(false);
-  };
-
-  const handleClickSection = (section: {
+  const handleClickPlaySection = (section: {
     id: number;
     startTime: string;
     endTime: string;
@@ -282,11 +284,27 @@ function App() {
     seekSection(section);
     setEditableStartTime(section.startTime);
     setEditableEndTime(section.endTime);
-    setDisplaySectionEditor(true);
+  };
+
+  const handleClickCancelSection = () => {
+    if (activeSectionId > 0) clearSection();
   };
 
   const handleClickAddSection = () => {
-    setDisplaySectionEditor(true);
+    setExpandedSectionId(0);
+  };
+
+  const handleClickDeleteSection = () => {
+    deleteSection();
+  };
+
+  const handleClickCloseSectionEditor = () => {
+    setExpandedSectionId(null);
+    clearSectionEditor();
+  };
+
+  const handleClickEditSection = (sectionId: number) => {
+    setExpandedSectionId(sectionId);
   };
 
   return (
@@ -365,61 +383,83 @@ function App() {
             <h2 className={'text-sm font-bold'}>Select section</h2>
             <div className={'flex-col items-center space-y-2'}>
               {sections.map((section) => (
-                <div
-                  key={section.id}
-                  className={`flex-col card ${
-                    activeSectionId === section.id
-                      ? 'bg-sky-100 border-sky-200 border-3'
-                      : ''
-                  }`}
-                  onClick={() => handleClickSection(section)}
-                >
+                <div key={section.id} className={'flex-col card'}>
                   <div className={'flex justify-between'}>
                     <div className={'text-base'}>
                       {`${section.startTime} - ${section.endTime}`}
                     </div>
-                    <button
-                      type={'button'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSection(section.id);
-                      }}
-                      className={'hover:text-slate-500 active:text-slate-500'}
-                    >
-                      <span className={'sr-only'}>Delete</span>
-                      <FaRegTrashAlt />
-                    </button>
+                    <div className={'flex space-x-2'}>
+                      {expandedSectionId === section.id ? (
+                        <button className={'btn btn-secondary'} onClick={handleClickCloseSectionEditor}>
+                          Close
+                        </button>
+                      ) : (
+                        <button className={'btn btn-secondary'} onClick={() => handleClickEditSection(section.id)}>
+                          Edit
+                        </button>
+                      )}
+                      {section.id === activeSectionId ? (
+                        <CancelSectionButton onClick={handleClickCancelSection}/>
+                      ) : (
+                        <button className={'btn btn-primary'} onClick={() => handleClickPlaySection(section)}>
+                          Play
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className={'text-sm text-gray-600 truncate'}>
-                    {section.note}
-                  </div>
+                  {expandedSectionId === section.id && (
+                    <>
+                      <div className={'text-sm text-gray-600 truncate'}>
+                        {section.note}
+                      </div>
+                      <div>
+                        <SectionEditor
+                          note={note}
+                          setNote={setNote}
+                          playerRef={playerRef}
+                          editableStartTime={editableStartTime}
+                          setEditableStartTime={setEditableStartTime}
+                          editableEndTime={editableEndTime}
+                          setEditableEndTime={setEditableEndTime}
+                        />
+                        <div className={'mt-4 w-full flex justify-between space-x-2'}>
+                          <SaveSectionButton onClick={handleClickUpdateSection}/>
+                          <DeleteSectionButton onClick={handleClickDeleteSection}/>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
-            <button
-              type={'button'}
-              className={'mt-2 w-full btn btn-primary'}
-              onClick={handleClickAddSection}
-            >
-              Add section
-            </button>
           </div>
         )}
-        {videoId && displaySectionEditor && (
+        {videoId && (
           <>
-            <SectionEditor
-              editableStartTime={editableStartTime}
-              setEditableStartTime={setEditableStartTime}
-              editableEndTime={editableEndTime}
-              setEditableEndTime={setEditableEndTime}
-              note={note}
-              setNote={setNote}
-              playerRef={playerRef}
-            />
-            <div className={'mt-4 w-full flex justify-between space-x-2'}>
-              <CancelSectionButton onClick={handleClickCancelSection} />
-              <SaveSectionButton onClick={handleClickSaveSection} />
+          <button
+            type={'button'}
+            className={'mt-2 w-full btn btn-primary'}
+            onClick={handleClickAddSection}
+          >
+            Add section
+          </button>
+          {expandedSectionId === 0 && (
+            <div className={'flex-col card mt-2'}>
+              <SectionEditor
+                note={note}
+                setNote={setNote}
+                playerRef={playerRef}
+                editableStartTime={editableStartTime}
+                setEditableStartTime={setEditableStartTime}
+                editableEndTime={editableEndTime}
+                setEditableEndTime={setEditableEndTime}
+              />
+              <div className={'mt-4 w-full flex justify-between space-x-2'}>
+                <CancelSectionButton onClick={handleClickCancelSection}/>
+                <SaveSectionButton onClick={handleClickCreateSection}/>
+              </div>
             </div>
+          )}
           </>
         )}
         {videoId && (
