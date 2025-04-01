@@ -15,7 +15,7 @@ function App() {
   const [videos, setVideos] = useState<
     { videoId: string; videoTitle: string }[]
   >([]);
-  const [sections, setSections] = useState<
+  const [sections, fetchSections] = useState<
     {
       id: number;
       startTime: string;
@@ -83,7 +83,7 @@ function App() {
 
   useEffect(() => {
     const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    setSections(storedSections);
+    fetchSections(storedSections);
   }, [videoId]);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ function App() {
     setVideoTitle(videoTitle);
 
     const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    setSections(storedSections);
+    fetchSections(storedSections);
   };
 
   const handleClickClearVideo = () => {
@@ -189,7 +189,7 @@ function App() {
     const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
     storedData.push(section);
     localStorage.setItem(videoId, JSON.stringify(storedData));
-    setSections(storedData);
+    fetchSections(storedData);
     seekSection(storedData[storedData.length - 1]);
     setExpandedSectionId(section.id);
 
@@ -208,10 +208,10 @@ function App() {
   };
 
   const updateSection = async (section: {
-    note: string;
-    startTime: string;
     id: number;
+    startTime: string;
     endTime: string;
+    note: string;
   }) => {
     const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
     const sectionIndex = storedData.findIndex(
@@ -219,7 +219,7 @@ function App() {
     );
     if (sectionIndex > -1) storedData[sectionIndex] = section;
     localStorage.setItem(videoId, JSON.stringify(storedData));
-    setSections(storedData);
+    fetchSections(storedData);
   };
 
   const handleClickUpdateSection = async (section: {
@@ -229,7 +229,7 @@ function App() {
     note: string;
   }) => {
     await updateSection(section);
-    seekSection(section);
+    if (activeSectionId === section.id) seekSection(section);
   };
 
   const handleClickCreateSection = async () => {
@@ -264,34 +264,28 @@ function App() {
     setEditableNote('');
   };
 
-  const deleteSection = () => {
-    if (window.confirm('Delete this section?')) {
-      const existingSections = JSON.parse(
-        localStorage.getItem(videoId) || '[]',
-      );
+  const deleteSection = (sectionId: number) => {
+    if (!window.confirm('Delete this section?')) return;
 
-      const sectionIndex = existingSections.findIndex(
-        (s: { id: number }) => s.id === activeSectionId,
-      );
+    const existingSections = JSON.parse(localStorage.getItem(videoId) || '[]');
+    const sectionIndex = existingSections.findIndex(
+      (s: { id: number }) => s.id === sectionId,
+    );
 
-      if (sectionIndex !== -1) {
-        existingSections.splice(sectionIndex, 1);
-        if (existingSections.length === 0) {
-          const existingVideos = JSON.parse(
-            localStorage.getItem('videos') || '[]',
-          );
-          const updatedVideos = existingVideos.filter(
-            (video: { videoId: string }) => video.videoId !== videoId,
-          );
-          localStorage.setItem('videos', JSON.stringify(updatedVideos));
-          setVideos(updatedVideos);
-          localStorage.removeItem(videoId);
-        } else {
-          localStorage.setItem(videoId, JSON.stringify(existingSections));
-        }
-        clearSection();
-        setSections(existingSections);
-      }
+    if (sectionIndex === -1) return;
+    fetchSections(existingSections);
+
+    existingSections.splice(sectionIndex, 1);
+    if (existingSections.length === 0) {
+      const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
+      const updatedVideos = existingVideos.filter(
+        (video: { videoId: string }) => video.videoId !== videoId,
+      );
+      localStorage.setItem('videos', JSON.stringify(updatedVideos));
+      setVideos(updatedVideos);
+      localStorage.removeItem(videoId);
+    } else {
+      localStorage.setItem(videoId, JSON.stringify(existingSections));
     }
   };
 
@@ -299,7 +293,6 @@ function App() {
     id: number;
     startTime: string;
     endTime: string;
-    note: string;
   }) => {
     seekSection(section);
   };
@@ -313,8 +306,11 @@ function App() {
     setExpandedSectionId(0);
   };
 
-  const handleClickDeleteSection = () => {
-    deleteSection();
+  const handleClickDeleteSection = (sectionId: number) => {
+    deleteSection(sectionId);
+    clearSection();
+    clearSectionEditor();
+    setExpandedSectionId(null);
   };
 
   const handleClickCloseSectionEditor = () => {
@@ -328,10 +324,10 @@ function App() {
     endTime: string;
     note: string;
   }) => {
+    setExpandedSectionId(section.id);
     setEditableStartTime(section.startTime);
     setEditableEndTime(section.endTime);
     setEditableNote(section.note);
-    setExpandedSectionId(section.id);
   };
 
   return (
@@ -369,7 +365,7 @@ function App() {
                 <li
                   key={video.videoId}
                   className={
-                    'p-3 flex items-center space-x-1 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
+                    'p-3 flex items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -408,9 +404,9 @@ function App() {
         {videoId && sections.length > 0 && (
           <div className={'mt-2'}>
             <h2 className={'text-sm font-bold'}>Select section</h2>
-            <div className={'flex-col items-center space-y-2'}>
+            <ul className={'divide-y divide-gray-200 rounded border border-gray-300'}>
               {sections.map((section) => (
-                <div key={section.id} className={'flex-col card'}>
+                <li key={section.id} className={'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'}>
                   <div className={'flex justify-between'}>
                     <div>
                       <div className={'text-base'}>
@@ -478,14 +474,14 @@ function App() {
                           }
                         />
                         <DeleteSectionButton
-                          onClick={handleClickDeleteSection}
+                          onClick={() => handleClickDeleteSection(section.id)}
                         />
                       </div>
                     </div>
                   )}
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
         {videoId && (
