@@ -5,6 +5,7 @@ import CancelSectionButton from './CancelSectionButton.tsx';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -12,17 +13,17 @@ function App() {
   const [tempVideoId, setEditableVideoId] = useState('');
   const [videoHeight, setVideoHeight] = useState('auto');
   const [opts, setOpts] = useState({});
-  const [videos, setVideos] = useState<
+  const [videos, setVideos] = useLocalStorage<
     { videoId: string; videoTitle: string }[]
-  >([]);
-  const [sections, fetchSections] = useState<
+  >('videos', []);
+  const [sections, setSections] = useLocalStorage<
     {
       id: number;
       startTime: string;
       endTime: string;
       note: string;
     }[]
-  >([]);
+  >(videoId, []);
   const [activeSectionId, setActiveSectionId] = useState<number>(0);
   const [videoTitle, setVideoTitle] = useState('');
   const [startTime, setStartTime] = useState('00:00:00');
@@ -73,18 +74,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
-    setVideos(storedVideos);
-  }, []);
-
-  useEffect(() => {
     updateOpts();
   }, [updateOpts]);
 
   useEffect(() => {
-    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    fetchSections(storedSections);
-  }, [videoId]);
+    setSections(JSON.parse(localStorage.getItem(videoId) || '[]'));
+  }, [setSections, videoId]);
 
   useEffect(() => {
     const [hours, minutes, seconds] = startTime.split(':').map(Number);
@@ -160,13 +155,10 @@ function App() {
     setVideoId(videoId);
     setVideoTitle(videoTitle);
 
-    const storedSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    fetchSections(storedSections);
+    setSections(JSON.parse(localStorage.getItem(videoId) || '[]'));
   };
 
   const handleClickClearVideo = () => {
-    const storedVideos = JSON.parse(localStorage.getItem('videos') || '[]');
-    setVideos(storedVideos);
     setVideoId('');
     clearSection();
     clearSectionEditor();
@@ -186,22 +178,16 @@ function App() {
       note: editableNote,
     };
 
-    const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
-    storedData.push(section);
-    localStorage.setItem(videoId, JSON.stringify(storedData));
-    fetchSections(storedData);
+    const storedData = [...sections, section];
+    setSections(storedData);
     seekSection(storedData[storedData.length - 1]);
     setExpandedSectionId(section.id);
 
-    const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
+    const existingVideos = [...videos];
     const videoEntry = { videoId, videoTitle };
-    if (
-      !existingVideos.some(
-        (video: { videoId: string }) => video.videoId === videoId,
-      )
-    ) {
+    if (!existingVideos.some((video) => video.videoId === videoId)) {
       existingVideos.push(videoEntry);
-      localStorage.setItem('videos', JSON.stringify(existingVideos));
+      setVideos(existingVideos);
     }
 
     return section;
@@ -213,13 +199,8 @@ function App() {
     endTime: string;
     note: string;
   }) => {
-    const storedData = JSON.parse(localStorage.getItem(videoId) || '[]');
-    const sectionIndex = storedData.findIndex(
-      (s: { id: number }) => s.id === section.id,
-    );
-    if (sectionIndex > -1) storedData[sectionIndex] = section;
-    localStorage.setItem(videoId, JSON.stringify(storedData));
-    fetchSections(storedData);
+    const storedData = sections.map((s) => (s.id === section.id ? section : s));
+    setSections(storedData);
   };
 
   const handleClickUpdateSection = async (section: {
@@ -267,25 +248,13 @@ function App() {
   const deleteSection = (sectionId: number) => {
     if (!window.confirm('Delete this section?')) return;
 
-    const existingSections = JSON.parse(localStorage.getItem(videoId) || '[]');
-    const sectionIndex = existingSections.findIndex(
-      (s: { id: number }) => s.id === sectionId,
-    );
+    const existingSections = sections.filter((s) => s.id !== sectionId);
+    setSections(existingSections);
 
-    if (sectionIndex === -1) return;
-    fetchSections(existingSections);
-
-    existingSections.splice(sectionIndex, 1);
     if (existingSections.length === 0) {
-      const existingVideos = JSON.parse(localStorage.getItem('videos') || '[]');
-      const updatedVideos = existingVideos.filter(
-        (video: { videoId: string }) => video.videoId !== videoId,
-      );
-      localStorage.setItem('videos', JSON.stringify(updatedVideos));
+      const updatedVideos = videos.filter((video) => video.videoId !== videoId);
       setVideos(updatedVideos);
       localStorage.removeItem(videoId);
-    } else {
-      localStorage.setItem(videoId, JSON.stringify(existingSections));
     }
   };
 
@@ -404,9 +373,18 @@ function App() {
         {videoId && sections.length > 0 && (
           <div className={'mt-2'}>
             <h2 className={'text-sm font-bold'}>Select section</h2>
-            <ul className={'divide-y divide-gray-200 rounded border border-gray-300'}>
+            <ul
+              className={
+                'divide-y divide-gray-200 rounded border border-gray-300'
+              }
+            >
               {sections.map((section) => (
-                <li key={section.id} className={'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'}>
+                <li
+                  key={section.id}
+                  className={
+                    'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
+                  }
+                >
                   <div className={'flex justify-between'}>
                     <div>
                       <div className={'text-base'}>
