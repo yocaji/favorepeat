@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import CancelSectionButton from './CancelSectionButton.tsx';
@@ -6,13 +6,12 @@ import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
   const [videoId, setVideoId] = useState('');
   const [tempVideoId, setEditableVideoId] = useState('');
-  const [videoHeight, setVideoHeight] = useState('auto');
-  const [opts, setOpts] = useState({});
   const [videos, setVideos] = useLocalStorage<
     { videoId: string; videoTitle: string }[]
   >('videos', []);
@@ -37,49 +36,21 @@ function App() {
   const [editableEndTime, setEditableEndTime] = useState('00:00:00');
   const [editableNote, setEditableNote] = useState('');
 
-  const updateOpts = useCallback(async () => {
-    let start: number | undefined;
-    if (!videoId) {
-      start = undefined;
-    } else if (activeSectionId === 0) {
-      start = await playerRef.current?.getCurrentTime();
-    } else {
-      start = startSeconds;
-    }
-
-    setOpts({
-      playerVars: {
-        autoplay: activeSectionId > 0 ? 1 : 0,
-        start: start,
-        end: activeSectionId > 0 ? endSeconds : undefined,
-      },
-      width: '100%',
-      height: Number.parseInt(videoHeight) > 252 ? '252px' : videoHeight,
-    });
-  }, [videoId, activeSectionId, startSeconds, endSeconds, videoHeight]);
+  const { opts, setOpts } = useYouTubePlayer({
+    videoId,
+    activeSectionId,
+    startSeconds,
+    endSeconds,
+    playerRef,
+  });
 
   useEffect(() => {
-    const updateVideoHeight = () => {
-      const width = window.innerWidth;
-      const height = (width * 9) / 16;
-      setVideoHeight(`${height}px`);
-    };
-
-    updateVideoHeight();
-    window.addEventListener('resize', updateVideoHeight);
-
-    return () => {
-      window.removeEventListener('resize', updateVideoHeight);
-    };
-  }, []);
-
-  useEffect(() => {
-    updateOpts();
-  }, [updateOpts]);
+    setOpts();
+  }, [setOpts]);
 
   useEffect(() => {
     setSections(JSON.parse(localStorage.getItem(videoId) || '[]'));
-  }, [setSections, videoId]);
+  }, [videoId]);
 
   useEffect(() => {
     const [hours, minutes, seconds] = startTime.split(':').map(Number);
@@ -236,7 +207,6 @@ function App() {
     setStartTime('00:00:00');
     setEndTime('00:00:00');
     setActiveSectionId(0);
-    setExpandedSectionId(0);
   };
 
   const clearSectionEditor = () => {
@@ -414,7 +384,7 @@ function App() {
                       )}
                       {section.id === activeSectionId ? (
                         <CancelSectionButton
-                          onClick={handleClickCancelSection}
+                          onClick={() => handleClickCancelSection()}
                         />
                       ) : (
                         <button
@@ -459,49 +429,52 @@ function App() {
                   )}
                 </li>
               ))}
+              {videoId && (
+                <li
+                  className={
+                    'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
+                  }
+                >
+                  <button
+                    type={'button'}
+                    className={'w-full btn btn-primary'}
+                    onClick={handleClickAddSection}
+                  >
+                    Add section
+                  </button>
+                  {expandedSectionId === 0 && (
+                    <div className={'flex-col card mt-2'}>
+                      <SectionEditor
+                        playerRef={playerRef}
+                        editableStartTime={editableStartTime}
+                        setEditableStartTime={setEditableStartTime}
+                        editableEndTime={editableEndTime}
+                        setEditableEndTime={setEditableEndTime}
+                        editableNote={editableNote}
+                        setEditableNote={setEditableNote}
+                      />
+                      <div
+                        className={'mt-4 w-full flex justify-between space-x-2'}
+                      >
+                        <SaveSectionButton onClick={handleClickCreateSection} />
+                      </div>
+                    </div>
+                  )}
+                </li>
+              )}
             </ul>
           </div>
         )}
         {videoId && (
-          <>
-            <button
-              type={'button'}
-              className={'mt-2 w-full btn btn-primary'}
-              onClick={handleClickAddSection}
-            >
-              Add section
-            </button>
-            {expandedSectionId === 0 && (
-              <div className={'flex-col card mt-2'}>
-                <SectionEditor
-                  playerRef={playerRef}
-                  editableStartTime={editableStartTime}
-                  setEditableStartTime={setEditableStartTime}
-                  editableEndTime={editableEndTime}
-                  setEditableEndTime={setEditableEndTime}
-                  editableNote={editableNote}
-                  setEditableNote={setEditableNote}
-                />
-                <div className={'mt-4 w-full flex justify-between space-x-2'}>
-                  <SaveSectionButton onClick={handleClickCreateSection} />
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        {videoId && (
-          <>
-            <hr className={'my-4 border-gray-300'} />
-            <button
-              type={'button'}
-              onClick={handleClickClearVideo}
-              className={
-                'w-full flex items-center justify-center btn btn-secondary'
-              }
-            >
-              Close this video
-            </button>
-          </>
+          <button
+            type={'button'}
+            onClick={handleClickClearVideo}
+            className={
+              'w-full flex items-center justify-center mt-4 btn btn-secondary'
+            }
+          >
+            Close this video
+          </button>
         )}
       </div>
       <footer
