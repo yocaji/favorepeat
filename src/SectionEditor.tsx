@@ -1,3 +1,4 @@
+import { Button, Textarea } from '@headlessui/react';
 import type React from 'react';
 import type { YouTubePlayer } from 'react-youtube';
 
@@ -42,32 +43,33 @@ const SectionEditor: React.FC<SectionFormProps> = ({
   return (
     <>
       <div className={'flex justify-between'}>
-        <div className={'block w-1/2 mr-2'}>
+        <div className={'block w-1/2'}>
           <span className={'text-sm font-bold'}>Start from</span>
-          <div className={'flex items-center'}>
-            <label htmlFor="startTime" className={'sr-only'}>
-              Start Time
-            </label>
+          <label htmlFor="startTime" className={'sr-only'}>
+            Start Time
+          </label>
+          <div className={'flex items-stretch'}>
             <input
               id={'startTime'}
               type={'time'}
               step={'1'}
               value={editableStartTime}
               onChange={(e) => setEditableStartTime(e.target.value)}
-              className={'w-full textbox text-lg'}
+              className={'w-full textbox text-lg rounded-l-lg rounded-r-none'}
             />
+            <Button
+              onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
+              className={
+                'btn btn-secondary rounded-l-none rounded-r-lg'
+              }
+            >
+              Now
+            </Button>
           </div>
-          <button
-            type={'button'}
-            onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
-            className={'mt-2 btn btn-secondary w-full'}
-          >
-            Now
-          </button>
         </div>
         <div className={'block w-1/2 ml-2'}>
           <span className={'text-sm font-bold'}>End at</span>
-          <div className={'flex items-center'}>
+          <div className={'flex items-stretch'}>
             <label htmlFor="endTime" className={'sr-only'}>
               End Time
             </label>
@@ -77,21 +79,23 @@ const SectionEditor: React.FC<SectionFormProps> = ({
               step={'1'}
               value={editableEndTime}
               onChange={(e) => setEditableEndTime(e.target.value)}
-              className={'w-full textbox text-lg'}
+              className={'w-full textbox text-lg rounded-l-lg rounded-r-none'}
             />
+            <Button
+              onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
+              className={
+                'btn btn-secondary rounded-l-none rounded-r-lg'
+              }
+            >
+              Now
+            </Button>
           </div>
-          <button
-            type={'button'}
-            onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
-            className={'mt-2 btn btn-secondary w-full'}
-          >
-            Now
-          </button>
         </div>
       </div>
       <div className={'block mt-2'}>
         <span className={'text-sm font-bold'}>Note</span>
-        <textarea
+        <Textarea
+          name={'note'}
           value={editableNote}
           onChange={(e) => setEditableNote(e.target.value)}
           className={'w-full textbox'}

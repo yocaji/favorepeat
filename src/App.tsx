@@ -1,7 +1,7 @@
+import { Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
-import CancelSectionButton from './CancelSectionButton.tsx';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
@@ -23,18 +23,15 @@ function App() {
       note: string;
     }[]
   >(videoId, []);
-  const [activeSectionId, setActiveSectionId] = useState<number>(0);
   const [videoTitle, setVideoTitle] = useState('');
   const [startTime, setStartTime] = useState('00:00:00');
   const [endTime, setEndTime] = useState('00:00:00');
   const [startSeconds, setStartSeconds] = useState(0);
   const [endSeconds, setEndSeconds] = useState(0);
-  const [expandedSectionId, setExpandedSectionId] = useState<number | null>(
-    null,
-  );
   const [editableStartTime, setEditableStartTime] = useState('00:00:00');
   const [editableEndTime, setEditableEndTime] = useState('00:00:00');
   const [editableNote, setEditableNote] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState<number>(0);
 
   const { opts, setOpts } = useYouTubePlayer({
     videoId,
@@ -63,6 +60,25 @@ function App() {
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     setEndSeconds(totalSeconds);
   }, [endTime]);
+
+  useEffect(() => {
+    if (activeSectionId === 0) {
+      seekSection({
+        id: 0,
+        startTime: '00:00:00',
+        endTime: '00:00:00',
+      });
+      clearSectionEditor();
+      return;
+    }
+
+    const section = sections.find((section) => section.id === activeSectionId);
+    if (!section) return;
+    seekSection(section);
+    setEditableStartTime(section.startTime);
+    setEditableEndTime(section.endTime);
+    setEditableNote(section.note);
+  }, [activeSectionId, sections]);
 
   const onPlayerReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -133,7 +149,6 @@ function App() {
     setVideoId('');
     clearSection();
     clearSectionEditor();
-    setExpandedSectionId(null);
   };
 
   const createSection = async (): Promise<{
@@ -152,7 +167,6 @@ function App() {
     const storedData = [...sections, section];
     setSections(storedData);
     seekSection(storedData[storedData.length - 1]);
-    setExpandedSectionId(section.id);
 
     const existingVideos = [...videos];
     const videoEntry = { videoId, videoTitle };
@@ -172,25 +186,6 @@ function App() {
   }) => {
     const storedData = sections.map((s) => (s.id === section.id ? section : s));
     setSections(storedData);
-  };
-
-  const handleClickUpdateSection = async (section: {
-    id: number;
-    startTime: string;
-    endTime: string;
-    note: string;
-  }) => {
-    await updateSection(section);
-    if (activeSectionId === section.id) seekSection(section);
-  };
-
-  const handleClickCreateSection = async () => {
-    const section = await createSection();
-    seekSection({
-      id: section.id,
-      startTime: section.startTime,
-      endTime: section.endTime,
-    });
   };
 
   const seekSection = (section: {
@@ -228,255 +223,183 @@ function App() {
     }
   };
 
-  const handleClickPlaySection = (section: {
-    id: number;
-    startTime: string;
-    endTime: string;
-  }) => {
-    seekSection(section);
-  };
-
-  const handleClickCancelSection = () => {
-    if (activeSectionId > 0) clearSection();
-  };
-
-  const handleClickAddSection = () => {
-    clearSectionEditor();
-    setExpandedSectionId(0);
-  };
-
-  const handleClickDeleteSection = (sectionId: number) => {
-    deleteSection(sectionId);
-    clearSection();
-    clearSectionEditor();
-    setExpandedSectionId(null);
-  };
-
-  const handleClickCloseSectionEditor = () => {
-    setExpandedSectionId(null);
-    clearSectionEditor();
-  };
-
-  const handleClickEditSection = (section: {
+  const handleClickSaveSection = async (section: {
     id: number;
     startTime: string;
     endTime: string;
     note: string;
   }) => {
-    setExpandedSectionId(section.id);
-    setEditableStartTime(section.startTime);
-    setEditableEndTime(section.endTime);
-    setEditableNote(section.note);
+    if (section.id === 0) {
+      const newSection = await createSection();
+      seekSection(newSection);
+    } else {
+      await updateSection(section);
+      if (activeSectionId === section.id) seekSection(section);
+    }
+  };
+
+  const handleClickDeleteSection = (sectionId: number) => {
+    deleteSection(sectionId);
+    if (sectionId !== activeSectionId) return;
+    clearSection();
+    clearSectionEditor();
   };
 
   return (
     <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
-        <h1 className={'flex items-center mt-4'}>
-          <FaHeart className={'text-xl text-rose-600'} />
-          <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
-          <FaRepeat className={'text-xl text-cyan-600'} />
-        </h1>
-      )}
-      {videoId && (
-        <div
-          className={'w-full h-full relative'}
-          style={{ maxWidth: '448px', maxHeight: '252px' }}
-        >
-          <YouTube
-            videoId={videoId}
-            opts={opts}
-            onReady={onPlayerReady}
-            onStateChange={onPlayerStateChange}
-          />
-        </div>
-      )}
-      <div className={'m-4 px-3 w-full max-w-md'}>
-        {!videoId && videos.length > 0 && (
-          <div>
-            <h2 className={'text-sm font-bold'}>Select video</h2>
-            <ul
-              className={
-                'divide-y divide-gray-200 rounded border border-gray-300'
-              }
-            >
-              {videos.map((video) => (
-                <li
-                  key={video.videoId}
+        <>
+          <h1 className={'flex items-center mt-4'}>
+            <FaHeart className={'text-xl text-rose-600'} />
+            <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
+            <FaRepeat className={'text-xl text-cyan-600'} />
+          </h1>
+          <div className={'m-4 px-3 w-full max-w-md'}>
+            {videos.length > 0 && (
+              <div>
+                <h2 className={'text-sm font-bold'}>Select video</h2>
+                <ul
                   className={
-                    'p-3 flex items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
-                  }
-                  onClick={() =>
-                    handleClickStoredVideo(video.videoId, video.videoTitle)
+                    'divide-y divide-gray-200 rounded border border-gray-300'
                   }
                 >
-                  <div className={'truncate'}>{video.videoTitle}</div>
-                  <FaAngleRight className={'text-slate-400'} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {!videoId && (
-          <div className={'mt-4'}>
-            <label htmlFor="videoId" className={'text-sm font-bold'}>
-              Video ID or URL
-            </label>
-            <div className={'flex items-center'}>
-              <input
-                id="videoId"
-                type="text"
-                value={tempVideoId}
-                onChange={(e) => setEditableVideoId(e.target.value)}
-                className={'textbox w-full'}
-              />
-              <button
-                type={'button'}
-                onClick={() => handleClickLoadVideo(tempVideoId)}
-                className={'ml-2 btn btn-primary'}
-              >
-                Load
-              </button>
+                  {videos.map((video) => (
+                    <li
+                      key={video.videoId}
+                      className={
+                        'p-3 flex items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
+                      }
+                      onClick={() =>
+                        handleClickStoredVideo(video.videoId, video.videoTitle)
+                      }
+                    >
+                      <div className={'truncate'}>{video.videoTitle}</div>
+                      <FaAngleRight className={'text-slate-400'} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className={'mt-4'}>
+              <label htmlFor="videoId" className={'text-sm font-bold'}>
+                Video ID or URL
+              </label>
+              <div className={'flex items-center'}>
+                <input
+                  id="videoId"
+                  type="text"
+                  value={tempVideoId}
+                  onChange={(e) => setEditableVideoId(e.target.value)}
+                  className={'textbox w-full'}
+                />
+                <button
+                  type={'button'}
+                  onClick={() => handleClickLoadVideo(tempVideoId)}
+                  className={'ml-2 btn btn-primary'}
+                >
+                  Load
+                </button>
+              </div>
             </div>
           </div>
-        )}
-        {videoId && sections.length > 0 && (
-          <div className={'mt-2'}>
-            <h2 className={'text-sm font-bold'}>Select section</h2>
-            <ul
+        </>
+      )}
+      {videoId && (
+        <>
+          <div
+            className={'w-full h-full relative'}
+            style={{maxWidth: '448px', maxHeight: '252px'}}
+          >
+            <YouTube
+              videoId={videoId}
+              opts={opts}
+              onReady={onPlayerReady}
+              onStateChange={onPlayerStateChange}
+            />
+          </div>
+          <div className={'w-full pt-4 px-4 pb-6 shadow-md bg-slate-100'}>
+            <SectionEditor
+              playerRef={playerRef}
+              editableStartTime={editableStartTime}
+              setEditableStartTime={setEditableStartTime}
+              editableEndTime={editableEndTime}
+              setEditableEndTime={setEditableEndTime}
+              editableNote={editableNote}
+              setEditableNote={setEditableNote}
+            />
+            <div className={'mt-4 w-full flex justify-between space-x-2'}>
+              <SaveSectionButton
+                onClick={() =>
+                  handleClickSaveSection({
+                    id: activeSectionId,
+                    startTime: editableStartTime,
+                    endTime: editableEndTime,
+                    note: editableNote,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className={'m-4 px-4 w-full max-w-md'}>
+            {sections.length > 0 && (
+              <div className={'mt-6'}>
+                <RadioGroup
+                  value={activeSectionId}
+                  onChange={setActiveSectionId}
+                  className={
+                    'divide-y divide-gray-200 rounded border border-gray-300'
+                  }
+                >
+                  {sections.map((section) => (
+                    <div
+                      key={section.id}
+                      className={'relative flex items-center'}
+                    >
+                      <Radio
+                        value={section.id}
+                        className={
+                          'flex-1 py-4 px-5 cursor-pointer rounded-lg bg-slate-50 hover:bg-white active:bg-white data-[checked]:bg-blue-400/20 data-[disabled]:bg-gray-100'
+                        }
+                      >
+                        <div className={'flex justify-between w-full'}>
+                          <div className={'text-base'}>
+                            {`${section.startTime} - ${section.endTime}`}
+                          </div>
+                          <div className={'text-sm text-gray-600 truncate'}>
+                            {section.note}
+                          </div>
+                        </div>
+                      </Radio>
+                      <DeleteSectionButton
+                        onClick={() => handleClickDeleteSection(section.id)}
+                      />
+                    </div>
+                  ))}
+                  <div key={0}>
+                    <Radio
+                      value={0}
+                      className={
+                        'flex py-4 px-5 cursor-pointer rounded-lg bg-slate-50 hover:bg-white active:bg-white active:bg-white data-[checked]:bg-blue-400 data-[disabled]:bg-gray-100'
+                      }
+                    >
+                      <div className={'w-full'}>Add section</div>
+                    </Radio>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+            <button
+              type={'button'}
+              onClick={handleClickClearVideo}
               className={
-                'divide-y divide-gray-200 rounded border border-gray-300'
+                'w-full flex items-center justify-center mt-4 btn btn-secondary'
               }
             >
-              {sections.map((section) => (
-                <li
-                  key={section.id}
-                  className={
-                    'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
-                  }
-                >
-                  <div className={'flex justify-between'}>
-                    <div>
-                      <div className={'text-base'}>
-                        {`${section.startTime} - ${section.endTime}`}
-                      </div>
-                      <div className={'text-sm text-gray-600 truncate'}>
-                        {section.note}
-                      </div>
-                    </div>
-                    <div className={'flex space-x-2'}>
-                      {expandedSectionId === section.id ? (
-                        <button
-                          type={'button'}
-                          className={'btn btn-secondary'}
-                          onClick={handleClickCloseSectionEditor}
-                        >
-                          Close
-                        </button>
-                      ) : (
-                        <button
-                          type={'button'}
-                          className={'btn btn-secondary'}
-                          onClick={() => handleClickEditSection(section)}
-                        >
-                          Edit
-                        </button>
-                      )}
-                      {section.id === activeSectionId ? (
-                        <CancelSectionButton
-                          onClick={() => handleClickCancelSection()}
-                        />
-                      ) : (
-                        <button
-                          type={'button'}
-                          className={'btn btn-primary'}
-                          onClick={() => handleClickPlaySection(section)}
-                        >
-                          Play
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {expandedSectionId === section.id && (
-                    <div>
-                      <SectionEditor
-                        playerRef={playerRef}
-                        editableStartTime={editableStartTime}
-                        setEditableStartTime={setEditableStartTime}
-                        editableEndTime={editableEndTime}
-                        setEditableEndTime={setEditableEndTime}
-                        editableNote={editableNote}
-                        setEditableNote={setEditableNote}
-                      />
-                      <div
-                        className={'mt-4 w-full flex justify-between space-x-2'}
-                      >
-                        <SaveSectionButton
-                          onClick={() =>
-                            handleClickUpdateSection({
-                              id: section.id,
-                              startTime: editableStartTime,
-                              endTime: editableEndTime,
-                              note: editableNote,
-                            })
-                          }
-                        />
-                        <DeleteSectionButton
-                          onClick={() => handleClickDeleteSection(section.id)}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-              {videoId && (
-                <li
-                  className={
-                    'p-3 flex-col items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
-                  }
-                >
-                  <button
-                    type={'button'}
-                    className={'w-full btn btn-primary'}
-                    onClick={handleClickAddSection}
-                  >
-                    Add section
-                  </button>
-                  {expandedSectionId === 0 && (
-                    <div className={'flex-col card mt-2'}>
-                      <SectionEditor
-                        playerRef={playerRef}
-                        editableStartTime={editableStartTime}
-                        setEditableStartTime={setEditableStartTime}
-                        editableEndTime={editableEndTime}
-                        setEditableEndTime={setEditableEndTime}
-                        editableNote={editableNote}
-                        setEditableNote={setEditableNote}
-                      />
-                      <div
-                        className={'mt-4 w-full flex justify-between space-x-2'}
-                      >
-                        <SaveSectionButton onClick={handleClickCreateSection} />
-                      </div>
-                    </div>
-                  )}
-                </li>
-              )}
-            </ul>
+              Close this video
+            </button>
           </div>
-        )}
-        {videoId && (
-          <button
-            type={'button'}
-            onClick={handleClickClearVideo}
-            className={
-              'w-full flex items-center justify-center mt-4 btn btn-secondary'
-            }
-          >
-            Close this video
-          </button>
-        )}
-      </div>
+        </>
+      )}
       <footer
         className={
           'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'
