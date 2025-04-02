@@ -81,7 +81,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
         </Field>
       </div>
       <Field className={'block'}>
-        <Label className={'text-sm font-bold'}>Note</Label>
+        <Label className={'sr-only'}>Note</Label>
         <Textarea
           name={'note'}
           value={editableNote}

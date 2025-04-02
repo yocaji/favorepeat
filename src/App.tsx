@@ -407,7 +407,7 @@ function App() {
         {videoId && (
           <Button
             onClick={handleClickClearVideo}
-            className={'w-full btn btn-secondary'}
+            className={'w-full btn btn-footer'}
           >
             Close this video
           </Button>
