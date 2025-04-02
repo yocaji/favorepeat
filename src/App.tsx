@@ -255,61 +255,59 @@ function App() {
   return (
     <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
-        <>
-          <h1 className={'flex items-center mt-4'}>
+        <div className={'flex-grow px-4 w-full max-w-md bg-slate-100'}>
+          <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
             <FaHeart className={'text-xl text-rose-600'} />
             <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
             <FaRepeat className={'text-xl text-cyan-600'} />
           </h1>
-          <div className={'m-4 px-3 w-full max-w-md'}>
-            {videos.length > 0 && (
-              <div>
-                <h2 className={'text-sm font-bold'}>Select video</h2>
-                <ul
+          {videos.length > 0 && (
+            <div
+              className={
+                'rounded-lg border-2 border-gray-200 divide-y-2 divide-gray-200'
+              }
+            >
+              {videos.map((video) => (
+                <Button
+                  key={video.videoId}
                   className={
-                    'divide-y divide-gray-200 rounded border border-gray-300'
+                    'p-4 w-full flex items-center space-x-2 justify-between ' +
+                    'first:rounded-t-lg last:rounded-b-lg ' +
+                    'bg-slate-50 hover:bg-white active:bg-white ' +
+                    'transition duration-300'
+                  }
+                  onClick={() =>
+                    handleClickStoredVideo(video.videoId, video.videoTitle)
                   }
                 >
-                  {videos.map((video) => (
-                    <li
-                      key={video.videoId}
-                      className={
-                        'p-3 flex items-center space-x-2 justify-between first:rounded-t last:rounded-b bg-slate-50 hover:bg-white active:bg-white'
-                      }
-                      onClick={() =>
-                        handleClickStoredVideo(video.videoId, video.videoTitle)
-                      }
-                    >
-                      <div className={'truncate'}>{video.videoTitle}</div>
-                      <FaAngleRight className={'text-slate-400'} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <Field className={'mt-4'}>
-              <Label className={'text-sm font-bold'}>Video ID or URL</Label>
-              <div className={'flex items-center'}>
-                <Input
-                  value={tempVideoId}
-                  onChange={(e) => setEditableVideoId(e.target.value)}
-                  className={'textbox w-full'}
-                />
-                <Button
-                  onClick={() => handleClickLoadVideo(tempVideoId)}
-                  className={'ml-2 btn btn-primary'}
-                >
-                  Load
+                  <div className={'truncate'}>{video.videoTitle}</div>
+                  <FaAngleRight className={'text-slate-400'} />
                 </Button>
-              </div>
-            </Field>
-          </div>
-        </>
+              ))}
+            </div>
+          )}
+          <Field className={'mt-4'}>
+            <Label className={'text-sm font-bold'}>Video ID or URL</Label>
+            <div className={'flex space-x-2'}>
+              <Input
+                value={tempVideoId}
+                onChange={(e) => setEditableVideoId(e.target.value)}
+                className={'textbox w-full'}
+              />
+              <Button
+                onClick={() => handleClickLoadVideo(tempVideoId)}
+                className={'btn btn-secondary'}
+              >
+                Load
+              </Button>
+            </div>
+          </Field>
+        </div>
       )}
       {videoId && (
         <>
           <div
-            className={'w-full h-full relative'}
+            className={'w-full h-full relative bg-slate-500/10'}
             style={{ maxWidth: '448px', maxHeight: '252px' }}
           >
             <YouTube
@@ -347,69 +345,73 @@ function App() {
             </div>
           </div>
           <div
-            className={'w-full flex-grow max-w-md pt-4 px-4 space-y-6 bg-slate-500/10'}
-            id={'section'}
+            className={
+              'w-full flex-grow max-w-md px-4 py-8 space-y-6 bg-slate-500/10'
+            }
           >
             {sections.length > 0 && (
-              <div className={'mt-6'}>
+              <>
                 <RadioGroup
                   value={activeSectionId}
                   onChange={setActiveSectionId}
                   className={
-                    'divide-y divide-gray-200 rounded border border-gray-300'
+                    'divide-y-2 divide-gray-200 rounded-lg bg-rose-600'
                   }
                 >
                   {sections.map((section) => (
-                    <Field key={section.id} className={'flex'}>
-                      <Radio
-                        value={section.id}
-                        className={
-                          'w-full py-4 px-5 cursor-pointer first:rounded-t-lg ' +
-                          'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
-                          'border-2 border-transparent data-[checked]:border-sky-500/30'
-                        }
-                      >
-                        <div className={'text-base cursor-pointer'}>
-                          {`${section.startTime} - ${section.endTime}`}
-                        </div>
-                        <div className={'text-sm text-gray-600 truncate'}>
-                          {section.note}
-                        </div>
-                      </Radio>
+                    <div
+                      key={section.id}
+                      className={'flex items-stretch justify-between'}
+                    >
+                      <Field className={'flex w-full'}>
+                        <Radio
+                          value={section.id}
+                          className={
+                            'w-full py-4 px-5 cursor-pointer ' +
+                            'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
+                            'border-2 border-transparent data-[checked]:border-sky-500/30'
+                          }
+                        >
+                          <div className={'text-base cursor-pointer'}>
+                            {`${section.startTime} - ${section.endTime}`}
+                          </div>
+                          <div className={'text-sm text-gray-600 truncate'}>
+                            {section.note}
+                          </div>
+                        </Radio>
+                      </Field>
                       <DeleteSectionButton
                         onClick={() => handleClickDeleteSection(section.id)}
                       />
-                    </Field>
+                    </div>
                   ))}
-                  <Field
-                    key={0}
-                    className={
-                      'w-full py-4 px-5 cursor-pointer rounded-b-lg ' +
-                      'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
-                      'border-2 border-transparent data-[checked]:border-sky-500/30'
-                    }
-                  >
-                    <Radio value={0}>
-                      <div>Add section</div>
-                    </Radio>
-                  </Field>
                 </RadioGroup>
-              </div>
+                <div className={'flex-col w-1/2 space-y-6 mx-auto'}>
+                  <Button
+                    className={'w-full btn btn-secondary'}
+                    onClick={() => setActiveSectionId(0)}
+                  >
+                    New section
+                  </Button>
+                </div>
+              </>
             )}
-            <div className={'flex justify-center'}>
-              <Button
-                onClick={handleClickClearVideo}
-                className={'w-1/2 btn btn-secondary'}
-              >
-                Close this video
-              </Button>
-            </div>
           </div>
         </>
       )}
       <footer
-        className={'w-full max-w-md text-center py-4 bg-slate-100/50 mt-auto'}
+        className={
+          'w-full max-w-md px-4 py-6 bg-slate-100/50 shadow-sm text-center space-y-8'
+        }
       >
+        {videoId && (
+          <Button
+            onClick={handleClickClearVideo}
+            className={'w-full btn btn-secondary'}
+          >
+            Close this video
+          </Button>
+        )}
         <div className={'text-sm'}>©FAVOREPEAT</div>
       </footer>
     </div>
