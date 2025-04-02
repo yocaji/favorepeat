@@ -1,3 +1,4 @@
+import { Button } from '@headlessui/react';
 import type React from 'react';
 import { FaRegTrashAlt } from 'react-icons/fa';
 
@@ -7,10 +8,15 @@ interface DeleteButtonProps {
 
 const DeleteSectionButton: React.FC<DeleteButtonProps> = ({ onClick }) => {
   return (
-    <button type={'button'} onClick={onClick} className={'btn btn-secondary'}>
+    <Button
+      onClick={onClick}
+      className={
+        'p-4 cursor-pointer rounded-lg text-white hover:bg-rose-800/20 active:bg-rose-800/20'
+      }
+    >
       <span className={'sr-only'}>Delete</span>
       <FaRegTrashAlt />
-    </button>
+    </Button>
   );
 };
 
