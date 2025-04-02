@@ -10,7 +10,7 @@
     bg-slate-50;
   }
   .btn {
-    @apply p-2 rounded-lg;
+    @apply p-3 rounded-lg;
   }
   .btn-primary {
     @apply bg-slate-200

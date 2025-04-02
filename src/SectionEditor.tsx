@@ -1,4 +1,4 @@
-import { Button, Textarea } from '@headlessui/react';
+import { Button, Field, Input, Label, Textarea } from '@headlessui/react';
 import type React from 'react';
 import type { YouTubePlayer } from 'react-youtube';
 
@@ -42,15 +42,11 @@ const SectionEditor: React.FC<SectionFormProps> = ({
 }) => {
   return (
     <>
-      <div className={'flex justify-between'}>
-        <div className={'block w-1/2'}>
-          <span className={'text-sm font-bold'}>Start from</span>
-          <label htmlFor="startTime" className={'sr-only'}>
-            Start Time
-          </label>
+      <div className={'flex justify-between space-x-3'}>
+        <Field className={'block w-1/2'}>
+          <Label className={'text-sm font-bold'}>Start from</Label>
           <div className={'flex items-stretch'}>
-            <input
-              id={'startTime'}
+            <Input
               type={'time'}
               step={'1'}
               value={editableStartTime}
@@ -59,22 +55,16 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
-              className={
-                'btn btn-secondary rounded-l-none rounded-r-lg'
-              }
+              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>
           </div>
-        </div>
-        <div className={'block w-1/2 ml-2'}>
-          <span className={'text-sm font-bold'}>End at</span>
+        </Field>
+        <Field className={'block w-1/2'}>
+          <Label className={'text-sm font-bold'}>End at</Label>
           <div className={'flex items-stretch'}>
-            <label htmlFor="endTime" className={'sr-only'}>
-              End Time
-            </label>
-            <input
-              id={'endTime'}
+            <Input
               type={'time'}
               step={'1'}
               value={editableEndTime}
@@ -83,24 +73,22 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
-              className={
-                'btn btn-secondary rounded-l-none rounded-r-lg'
-              }
+              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>
           </div>
-        </div>
+        </Field>
       </div>
-      <div className={'block mt-2'}>
-        <span className={'text-sm font-bold'}>Note</span>
+      <Field className={'block'}>
+        <Label className={'text-sm font-bold'}>Note</Label>
         <Textarea
           name={'note'}
           value={editableNote}
           onChange={(e) => setEditableNote(e.target.value)}
           className={'w-full textbox'}
         />
-      </div>
+      </Field>
     </>
   );
 };

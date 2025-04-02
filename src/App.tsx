@@ -1,4 +1,11 @@
-import { Radio, RadioGroup } from '@headlessui/react';
+import {
+  Button,
+  Field,
+  Input,
+  Label,
+  Radio,
+  RadioGroup,
+} from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
@@ -280,27 +287,22 @@ function App() {
                 </ul>
               </div>
             )}
-            <div className={'mt-4'}>
-              <label htmlFor="videoId" className={'text-sm font-bold'}>
-                Video ID or URL
-              </label>
+            <Field className={'mt-4'}>
+              <Label className={'text-sm font-bold'}>Video ID or URL</Label>
               <div className={'flex items-center'}>
-                <input
-                  id="videoId"
-                  type="text"
+                <Input
                   value={tempVideoId}
                   onChange={(e) => setEditableVideoId(e.target.value)}
                   className={'textbox w-full'}
                 />
-                <button
-                  type={'button'}
+                <Button
                   onClick={() => handleClickLoadVideo(tempVideoId)}
                   className={'ml-2 btn btn-primary'}
                 >
                   Load
-                </button>
+                </Button>
               </div>
-            </div>
+            </Field>
           </div>
         </>
       )}
@@ -308,7 +310,7 @@ function App() {
         <>
           <div
             className={'w-full h-full relative'}
-            style={{maxWidth: '448px', maxHeight: '252px'}}
+            style={{ maxWidth: '448px', maxHeight: '252px' }}
           >
             <YouTube
               videoId={videoId}
@@ -317,7 +319,11 @@ function App() {
               onStateChange={onPlayerStateChange}
             />
           </div>
-          <div className={'w-full pt-4 px-4 pb-6 shadow-md bg-slate-100'}>
+          <div
+            className={
+              'w-full max-w-md pt-4 px-4 pb-6 space-y-4 shadow-sm bg-slate-100'
+            }
+          >
             <SectionEditor
               playerRef={playerRef}
               editableStartTime={editableStartTime}
@@ -327,7 +333,7 @@ function App() {
               editableNote={editableNote}
               setEditableNote={setEditableNote}
             />
-            <div className={'mt-4 w-full flex justify-between space-x-2'}>
+            <div className={'flex justify-center'}>
               <SaveSectionButton
                 onClick={() =>
                   handleClickSaveSection({
@@ -340,7 +346,10 @@ function App() {
               />
             </div>
           </div>
-          <div className={'m-4 px-4 w-full max-w-md'}>
+          <div
+            className={'w-full flex-grow max-w-md pt-4 px-4 space-y-6 bg-slate-500/10'}
+            id={'section'}
+          >
             {sections.length > 0 && (
               <div className={'mt-6'}>
                 <RadioGroup
@@ -351,59 +360,55 @@ function App() {
                   }
                 >
                   {sections.map((section) => (
-                    <div
-                      key={section.id}
-                      className={'relative flex items-center'}
-                    >
+                    <Field key={section.id} className={'flex'}>
                       <Radio
                         value={section.id}
                         className={
-                          'flex-1 py-4 px-5 cursor-pointer rounded-lg bg-slate-50 hover:bg-white active:bg-white data-[checked]:bg-blue-400/20 data-[disabled]:bg-gray-100'
+                          'w-full py-4 px-5 cursor-pointer first:rounded-t-lg ' +
+                          'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
+                          'border-2 border-transparent data-[checked]:border-sky-500/30'
                         }
                       >
-                        <div className={'flex justify-between w-full'}>
-                          <div className={'text-base'}>
-                            {`${section.startTime} - ${section.endTime}`}
-                          </div>
-                          <div className={'text-sm text-gray-600 truncate'}>
-                            {section.note}
-                          </div>
+                        <div className={'text-base cursor-pointer'}>
+                          {`${section.startTime} - ${section.endTime}`}
+                        </div>
+                        <div className={'text-sm text-gray-600 truncate'}>
+                          {section.note}
                         </div>
                       </Radio>
                       <DeleteSectionButton
                         onClick={() => handleClickDeleteSection(section.id)}
                       />
-                    </div>
+                    </Field>
                   ))}
-                  <div key={0}>
-                    <Radio
-                      value={0}
-                      className={
-                        'flex py-4 px-5 cursor-pointer rounded-lg bg-slate-50 hover:bg-white active:bg-white active:bg-white data-[checked]:bg-blue-400 data-[disabled]:bg-gray-100'
-                      }
-                    >
-                      <div className={'w-full'}>Add section</div>
+                  <Field
+                    key={0}
+                    className={
+                      'w-full py-4 px-5 cursor-pointer rounded-b-lg ' +
+                      'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
+                      'border-2 border-transparent data-[checked]:border-sky-500/30'
+                    }
+                  >
+                    <Radio value={0}>
+                      <div>Add section</div>
                     </Radio>
-                  </div>
+                  </Field>
                 </RadioGroup>
               </div>
             )}
-            <button
-              type={'button'}
-              onClick={handleClickClearVideo}
-              className={
-                'w-full flex items-center justify-center mt-4 btn btn-secondary'
-              }
-            >
-              Close this video
-            </button>
+            <div className={'flex justify-center'}>
+              <Button
+                onClick={handleClickClearVideo}
+                className={'w-1/2 btn btn-secondary'}
+              >
+                Close this video
+              </Button>
+            </div>
           </div>
         </>
       )}
       <footer
-        className={
-          'w-full text-center py-4 bg-slate-200 mt-auto border-t border-slate-300'
-        }
+        className={'w-full max-w-md text-center py-4 bg-slate-100/50 mt-auto'}
       >
         <div className={'text-sm'}>©FAVOREPEAT</div>
       </footer>
