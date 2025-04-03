@@ -55,7 +55,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
-              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
+              className={'btn btn-mono-2 rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>
@@ -73,7 +73,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
-              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
+              className={'btn btn-mono-2 rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>

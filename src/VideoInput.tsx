@@ -1,5 +1,5 @@
 import { Button, Field, Input, Label } from '@headlessui/react';
-import React from 'react';
+import type React from 'react';
 
 interface VideoInputProps {
   editableVideoId: string;
@@ -60,7 +60,7 @@ const VideoInput: React.FC<VideoInputProps> = ({
       />
       <Button
         onClick={() => handleClickLoadVideo(editableVideoId)}
-        className={'w-full mt-2 btn btn-secondary'}
+        className={'w-full mt-2 btn btn-mono-3'}
         disabled={!editableVideoId}
       >
         Load

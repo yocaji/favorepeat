@@ -15,15 +15,20 @@
     @apply p-3 rounded-lg
     hover:bg-white active:bg-white
     focus:inset-ring-2 focus:inset-ring-violet-500/30
-    transition duration-200;
+    disabled:cursor-not-allowed
+    transition duration-200 cursor-pointer;
   }
-  .btn-primary {
+  .selector {
     @apply bg-slate-200;
   }
-  .btn-secondary {
+  .btn-transparent {
+    @apply bg-transparent;
+  }
+  .btn-mono-2 {
     @apply bg-slate-200;
   }
-  .btn-footer{
-    @apply bg-slate-300;
+  .btn-mono-3 {
+    @apply bg-slate-300
+    disabled:text-slate-400 disabled:bg-slate-200;
   }
 }

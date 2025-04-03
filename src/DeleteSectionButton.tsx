@@ -11,7 +11,7 @@ const DeleteSectionButton: React.FC<DeleteButtonProps> = ({ onClick }) => {
     <Button
       onClick={onClick}
       className={
-        'p-4 cursor-pointer rounded-lg text-white hover:bg-rose-800/20 active:bg-rose-800/20'
+        'btn btn-transparent'
       }
     >
       <span className={'sr-only'}>Delete</span>

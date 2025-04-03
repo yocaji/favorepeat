@@ -1,18 +1,13 @@
-import {
-  Button,
-  Field,
-  Radio,
-  RadioGroup,
-} from '@headlessui/react';
+import { Button, Field, Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
+import VideoInput from './VideoInput.tsx';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
-import VideoInput from './VideoInput.tsx';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -197,7 +192,7 @@ function App() {
     id: number;
     startTime: string;
     endTime: string;
-    note: string,
+    note: string;
   }) => {
     if (section.id === 0) {
       const newSection = await createSection();
@@ -234,10 +229,10 @@ function App() {
                 <Button
                   key={video.videoId}
                   className={
-                    'p-4 w-full flex items-center space-x-2 justify-between ' +
+                    'px-4 py-3 w-full flex items-center space-x-2 justify-between ' +
                     'first:rounded-t-lg last:rounded-b-lg ' +
                     'bg-slate-50 hover:bg-white active:bg-white ' +
-                    'transition duration-300'
+                    'transition duration-300 cursor-pointer'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -307,22 +302,21 @@ function App() {
                 <RadioGroup
                   value={activeSectionId}
                   onChange={setActiveSectionId}
-                  className={
-                    'divide-y-2 divide-gray-200 rounded-lg bg-rose-600'
-                  }
+                  className={'space-y-4'}
                 >
                   {sections.map((section) => (
                     <div
                       key={section.id}
-                      className={'flex items-stretch justify-between'}
+                      className={'flex items-center justify-between space-x-2'}
                     >
                       <Field className={'flex w-full'}>
                         <Radio
                           value={section.id}
                           className={
-                            'w-full py-4 px-5 cursor-pointer ' +
-                            'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
-                            'border-2 border-transparent data-[checked]:border-sky-500/30'
+                            'w-full btn selector ' +
+                            'data-[checked]:bg-white ' +
+                            'data-[checked]:inset-ring-4 ' +
+                            'data-[checked]:inset-ring-violet-500/30'
                           }
                         >
                           <div className={'text-base cursor-pointer'}>
@@ -341,7 +335,7 @@ function App() {
                 </RadioGroup>
                 <div className={'flex-col w-1/2 space-y-6 mx-auto'}>
                   <Button
-                    className={'w-full btn btn-secondary'}
+                    className={'w-full btn btn-mono-2'}
                     onClick={() => setActiveSectionId(0)}
                   >
                     New section
@@ -360,7 +354,7 @@ function App() {
         {videoId && (
           <Button
             onClick={handleClickClearVideo}
-            className={'w-full btn btn-footer'}
+            className={'w-full btn btn-mono-3'}
           >
             Close this video
           </Button>

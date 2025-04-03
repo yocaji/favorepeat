@@ -9,7 +9,7 @@ const SaveSectionButton: React.FC<SaveButtonProps> = ({ onClick }) => {
     <button
       type={'button'}
       onClick={onClick}
-      className={'btn btn-secondary w-1/2'}
+      className={'btn btn-mono-2 w-1/2'}
     >
       Save
     </button>
