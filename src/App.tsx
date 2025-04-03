@@ -1,8 +1,6 @@
 import {
   Button,
   Field,
-  Input,
-  Label,
   Radio,
   RadioGroup,
 } from '@headlessui/react';
@@ -14,11 +12,12 @@ import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
+import VideoInput from './VideoInput.tsx';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
   const [videoId, setVideoId] = useState('');
-  const [tempVideoId, setEditableVideoId] = useState('');
+  const [editableVideoId, setEditableVideoId] = useState('');
   const [videos, setVideos] = useLocalStorage<
     { videoId: string; videoTitle: string }[]
   >('videos', []);
@@ -103,42 +102,6 @@ function App() {
         });
       }
     }
-  };
-
-  const fetchVideoTitle = async (videoId: string) => {
-    try {
-      const apiKey = import.meta.env.VITE_REACT_APP_YOUTUBE_API_KEY;
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`,
-      );
-      if (response.status !== 200) {
-        console.error(
-          `Error fetching video title: ${response.status} ${response.statusText}`,
-        );
-        return 'Anonymous';
-      }
-      const data = await response.json();
-      if (data.items.length > 0) {
-        return data.items[0].snippet.title;
-      }
-    } catch (error) {
-      console.error('Error fetching video title:', error);
-    }
-  };
-
-  const extractVideoId = (input: string): string => {
-    const urlPattern =
-      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|watch\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const match = input.match(urlPattern);
-    return match ? match[1] : input;
-  };
-
-  const handleClickLoadVideo = async (input: string) => {
-    const videoId = extractVideoId(input);
-    const title: string = await fetchVideoTitle(videoId);
-    setVideoTitle(title);
-    setVideoId(videoId);
-    setEditableVideoId('');
   };
 
   const handleClickStoredVideo = async (
@@ -234,7 +197,7 @@ function App() {
     id: number;
     startTime: string;
     endTime: string;
-    note: string;
+    note: string,
   }) => {
     if (section.id === 0) {
       const newSection = await createSection();
@@ -286,22 +249,12 @@ function App() {
               ))}
             </div>
           )}
-          <Field className={'mt-4'}>
-            <Label className={'text-sm font-bold'}>Video ID or URL</Label>
-            <div className={'flex space-x-2'}>
-              <Input
-                value={tempVideoId}
-                onChange={(e) => setEditableVideoId(e.target.value)}
-                className={'textbox w-full'}
-              />
-              <Button
-                onClick={() => handleClickLoadVideo(tempVideoId)}
-                className={'btn btn-secondary'}
-              >
-                Load
-              </Button>
-            </div>
-          </Field>
+          <VideoInput
+            editableVideoId={editableVideoId}
+            setEditableVideoId={setEditableVideoId}
+            setVideoId={setVideoId}
+            setVideoTitle={setVideoTitle}
+          />
         </div>
       )}
       {videoId && (
