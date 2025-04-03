@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-400 text-slate-700;
+    @apply bg-slate-400 text-slate-600;
   }
   .textbox {
     @apply p-2
@@ -21,7 +21,7 @@
   }
   .selector {
     @apply w-full
-    bg-slate-50/50 hover:bg-slate-50/75 active:bg-slate-50/100 data-[checked]:bg-slate-50/100
+    bg-slate-50/50 hover:bg-slate-50/75 active:bg-slate-50/100 data-[checked]:bg-violet-50/100
     data-[checked]:inset-ring-2 data-[checked]:inset-ring-violet-500/25;
   }
   .btn-transparent {

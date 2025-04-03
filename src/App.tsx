@@ -213,7 +213,7 @@ function App() {
   return (
     <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
-        <div className={'flex-grow px-4 w-full max-w-md bg-slate-300'}>
+        <div className={'flex-grow px-4 w-full max-w-md bg-slate-50/40'}>
           <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
             <FaHeart className={'text-xl text-rose-600'} />
             <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
@@ -256,7 +256,7 @@ function App() {
           </div>
           <div
             className={
-              'w-full max-w-md pt-4 px-4 pb-6 space-y-4 shadow-sm bg-slate-300'
+              'w-full max-w-md pt-4 px-4 pb-6 space-y-4 shadow-sm bg-slate-50/60'
             }
           >
             <SectionEditor
@@ -283,7 +283,7 @@ function App() {
           </div>
           <div
             className={
-              'w-full flex-grow max-w-md px-4 py-8 space-y-6 bg-slate-50/25'
+              'w-full flex-grow max-w-md px-4 py-8 space-y-6 bg-slate-50/40'
             }
           >
             <RadioGroup
@@ -320,7 +320,7 @@ function App() {
           </div>
         </>
       )}
-      <div className={'w-full max-w-md px-4 py-6 bg-slate-50/75 text-center'}>
+      <div className={'w-full max-w-md px-4 py-6 bg-slate-50/60 text-center'}>
         {!videoId && (
           <VideoInput
             editableVideoId={editableVideoId}
@@ -337,7 +337,7 @@ function App() {
       </div>
       <footer
         className={
-          'w-full max-w-md px-4 py-6 bg-slate-50/75 text-center space-y-8'
+          'w-full max-w-md px-4 py-6 bg-slate-50/60 text-center space-y-8'
         }
       >
         <div className={'text-sm'}>©FAVOREPEAT</div>
