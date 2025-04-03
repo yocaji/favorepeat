@@ -55,7 +55,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableStartTime, playerRef)}
-              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
+              className={'btn rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>
@@ -73,7 +73,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
             />
             <Button
               onClick={() => setTimeToCurrent(setEditableEndTime, playerRef)}
-              className={'btn btn-secondary rounded-l-none rounded-r-lg'}
+              className={'btn rounded-l-none rounded-r-lg'}
             >
               Now
             </Button>
@@ -86,7 +86,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
           name={'note'}
           value={editableNote}
           onChange={(e) => setEditableNote(e.target.value)}
-          className={'w-full textbox'}
+          className={'textbox w-full rounded-t-lg rounded-bl-lg'}
         />
       </Field>
     </>

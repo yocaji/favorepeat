@@ -1,18 +1,13 @@
-import {
-  Button,
-  Field,
-  Radio,
-  RadioGroup,
-} from '@headlessui/react';
+import { Button, Field, Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
 import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
 import SectionEditor from './SectionEditor.tsx';
+import VideoInput from './VideoInput.tsx';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
-import VideoInput from './VideoInput.tsx';
 
 function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -197,7 +192,7 @@ function App() {
     id: number;
     startTime: string;
     endTime: string;
-    note: string,
+    note: string;
   }) => {
     if (section.id === 0) {
       const newSection = await createSection();
@@ -218,26 +213,21 @@ function App() {
   return (
     <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
-        <div className={'flex-grow px-4 w-full max-w-md bg-slate-100'}>
+        <div className={'flex-grow px-4 w-full max-w-md bg-slate-300'}>
           <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
             <FaHeart className={'text-xl text-rose-600'} />
             <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
             <FaRepeat className={'text-xl text-cyan-600'} />
           </h1>
           {videos.length > 0 && (
-            <div
-              className={
-                'rounded-lg border-2 border-gray-200 divide-y-2 divide-gray-200'
-              }
-            >
+            <div>
               {videos.map((video) => (
                 <Button
                   key={video.videoId}
                   className={
-                    'p-4 w-full flex items-center space-x-2 justify-between ' +
-                    'first:rounded-t-lg last:rounded-b-lg ' +
-                    'bg-slate-50 hover:bg-white active:bg-white ' +
-                    'transition duration-300'
+                    'btn selector mb-[2px] ' +
+                    'w-full flex items-center space-x-2 justify-between ' +
+                    'rounded-none first:rounded-t-lg last:rounded-b-lg '
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -249,12 +239,6 @@ function App() {
               ))}
             </div>
           )}
-          <VideoInput
-            editableVideoId={editableVideoId}
-            setEditableVideoId={setEditableVideoId}
-            setVideoId={setVideoId}
-            setVideoTitle={setVideoTitle}
-          />
         </div>
       )}
       {videoId && (
@@ -272,7 +256,7 @@ function App() {
           </div>
           <div
             className={
-              'w-full max-w-md pt-4 px-4 pb-6 space-y-4 shadow-sm bg-slate-100'
+              'w-full max-w-md pt-4 px-4 pb-6 space-y-4 shadow-sm bg-slate-300'
             }
           >
             <SectionEditor
@@ -299,72 +283,63 @@ function App() {
           </div>
           <div
             className={
-              'w-full flex-grow max-w-md px-4 py-8 space-y-6 bg-slate-500/10'
+              'w-full flex-grow max-w-md px-4 py-8 space-y-6 bg-slate-50/25'
             }
           >
-            {sections.length > 0 && (
-              <>
-                <RadioGroup
-                  value={activeSectionId}
-                  onChange={setActiveSectionId}
-                  className={
-                    'divide-y-2 divide-gray-200 rounded-lg bg-rose-600'
-                  }
+            <RadioGroup
+              value={activeSectionId}
+              onChange={setActiveSectionId}
+              className={'space-y-4'}
+            >
+              {sections.map((section) => (
+                <div
+                  key={section.id}
+                  className={'flex items-center justify-between space-x-2'}
                 >
-                  {sections.map((section) => (
-                    <div
-                      key={section.id}
-                      className={'flex items-stretch justify-between'}
-                    >
-                      <Field className={'flex w-full'}>
-                        <Radio
-                          value={section.id}
-                          className={
-                            'w-full py-4 px-5 cursor-pointer ' +
-                            'bg-slate-100 hover:bg-white active:bg-white data-[checked]:bg-white ' +
-                            'border-2 border-transparent data-[checked]:border-sky-500/30'
-                          }
-                        >
-                          <div className={'text-base cursor-pointer'}>
-                            {`${section.startTime} - ${section.endTime}`}
-                          </div>
-                          <div className={'text-sm text-gray-600 truncate'}>
-                            {section.note}
-                          </div>
-                        </Radio>
-                      </Field>
-                      <DeleteSectionButton
-                        onClick={() => handleClickDeleteSection(section.id)}
-                      />
-                    </div>
-                  ))}
-                </RadioGroup>
-                <div className={'flex-col w-1/2 space-y-6 mx-auto'}>
-                  <Button
-                    className={'w-full btn btn-secondary'}
-                    onClick={() => setActiveSectionId(0)}
-                  >
-                    New section
-                  </Button>
+                  <Field className={'flex w-full'}>
+                    <Radio value={section.id} className={'btn selector'}>
+                      <div className={'text-base cursor-pointer'}>
+                        {`${section.startTime} - ${section.endTime}`}
+                      </div>
+                      <div className={'text-sm text-gray-600 truncate'}>
+                        {section.note}
+                      </div>
+                    </Radio>
+                  </Field>
+                  <DeleteSectionButton
+                    onClick={() => handleClickDeleteSection(section.id)}
+                  />
                 </div>
-              </>
-            )}
+              ))}
+              <Field className={'flex w-full'}>
+                <Radio value={0} className={'btn selector'}>
+                  <div>New section</div>
+                </Radio>
+              </Field>
+            </RadioGroup>
           </div>
         </>
       )}
-      <footer
-        className={
-          'w-full max-w-md px-4 py-6 bg-slate-100/50 shadow-sm text-center space-y-8'
-        }
-      >
+      <div className={'w-full max-w-md px-4 py-6 bg-slate-50/75 text-center'}>
+        {!videoId && (
+          <VideoInput
+            editableVideoId={editableVideoId}
+            setEditableVideoId={setEditableVideoId}
+            setVideoId={setVideoId}
+            setVideoTitle={setVideoTitle}
+          />
+        )}
         {videoId && (
-          <Button
-            onClick={handleClickClearVideo}
-            className={'w-full btn btn-footer'}
-          >
+          <Button onClick={handleClickClearVideo} className={'w-full btn'}>
             Close this video
           </Button>
         )}
+      </div>
+      <footer
+        className={
+          'w-full max-w-md px-4 py-6 bg-slate-50/75 text-center space-y-8'
+        }
+      >
         <div className={'text-sm'}>©FAVOREPEAT</div>
       </footer>
     </div>

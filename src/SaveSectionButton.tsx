@@ -6,11 +6,7 @@ interface SaveButtonProps {
 
 const SaveSectionButton: React.FC<SaveButtonProps> = ({ onClick }) => {
   return (
-    <button
-      type={'button'}
-      onClick={onClick}
-      className={'btn btn-secondary w-1/2'}
-    >
+    <button type={'button'} onClick={onClick} className={'btn w-1/2'}>
       Save
     </button>
   );
