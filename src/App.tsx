@@ -236,6 +236,11 @@ function App() {
                     handleClickStoredVideo(video.videoId, video.videoTitle)
                   }
                 >
+                  <img
+                    src={`https://img.youtube.com/vi/${video.videoId}/default.jpg`}
+                    alt={`${video.videoTitle} thumbnail`}
+                    className={'w-16 h-9 object-cover rounded'}
+                  />
                   <div className={'truncate'}>{video.videoTitle}</div>
                   <FaAngleRight className={'text-slate-400'} />
                 </Button>
@@ -316,7 +321,7 @@ function App() {
                       <div className={'min-w-0'}>
                         <div>{`${section.startTime} - ${section.endTime}`}</div>
                         <div
-                          className={'text-xs text-slate-500 truncate min-w-0'}
+                          className={'text-sm text-slate-500 truncate min-w-0'}
                         >
                           {section.note}
                         </div>
