@@ -1,6 +1,12 @@
 import { Button, Field, Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FaAngleRight, FaCircle, FaCircleCheck, FaHeart, FaRepeat } from 'react-icons/fa6';
+import {
+  FaAngleRight,
+  FaCircle,
+  FaCircleCheck,
+  FaHeart,
+  FaRepeat,
+} from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
@@ -219,14 +225,12 @@ function App() {
             <FaRepeat className={'text-xl text-cyan-600'} />
           </h1>
           {videos.length > 0 && (
-            <div>
+            <div className={'space-y-2'}>
               {videos.map((video) => (
                 <Button
                   key={video.videoId}
                   className={
-                    'btn selector mb-[2px] ' +
-                    'w-full flex items-center space-x-2 justify-between ' +
-                    'rounded-none first:rounded-t-lg last:rounded-b-lg '
+                    'btn selector w-full flex items-center justify-between space-x-2'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -266,7 +270,6 @@ function App() {
               setEditableEndTime={setEditableEndTime}
               editableNote={editableNote}
               setEditableNote={setEditableNote}
-              rows={4} // 追加
             />
             <div className={'flex justify-center'}>
               <SaveSectionButton
@@ -289,22 +292,32 @@ function App() {
             <RadioGroup
               value={activeSectionId}
               onChange={setActiveSectionId}
-              className={'space-y-4'}
+              className={'space-y-2'}
             >
               {sections.map((section) => (
                 <Field key={section.id} className={'relative'}>
-                  <Radio value={section.id} className={'flex w-full btn selector group'}>
+                  <Radio
+                    value={section.id}
+                    className={'flex w-full btn selector group'}
+                  >
                     <div className={'flex w-full items-center space-x-2'}>
                       <div>
-                        <FaCircle className={'block text-slate-500/10 group-data-[checked]:hidden'}/>
+                        <FaCircle
+                          className={
+                            'block text-slate-500/10 group-data-[checked]:hidden'
+                          }
+                        />
                         <FaCircleCheck
-                          className={'hidden group-data-[checked]:block transition duration-200 text-violet-400'}/>
+                          className={
+                            'hidden group-data-[checked]:block transition duration-200 text-violet-400'
+                          }
+                        />
                       </div>
                       <div className={'min-w-0'}>
-                        <div>
-                          {`${section.startTime} - ${section.endTime}`}
-                        </div>
-                        <div className={'text-xs text-slate-500 truncate min-w-0'}>
+                        <div>{`${section.startTime} - ${section.endTime}`}</div>
+                        <div
+                          className={'text-xs text-slate-500 truncate min-w-0'}
+                        >
                           {section.note}
                         </div>
                       </div>
@@ -320,9 +333,17 @@ function App() {
               <Field className={'flex w-full'}>
                 <Radio value={0} className={'btn selector group'}>
                   <div className={'flex w-full items-center space-x-2'}>
-                  <div>
-                    <FaCircle className={'block text-slate-500/10 group-data-[checked]:hidden'}/>
-                      <FaCircleCheck className={'hidden group-data-[checked]:block transition duration-200 text-violet-400'} />
+                    <div>
+                      <FaCircle
+                        className={
+                          'block text-slate-500/10 group-data-[checked]:hidden'
+                        }
+                      />
+                      <FaCircleCheck
+                        className={
+                          'hidden group-data-[checked]:block transition duration-200 text-violet-400'
+                        }
+                      />
                     </div>
                     <div>New section</div>
                   </div>
@@ -347,11 +368,7 @@ function App() {
           </Button>
         )}
       </div>
-      <footer
-        className={
-          'w-full max-w-md px-4 py-6 bg-slate-50/60 space-y-8'
-        }
-      >
+      <footer className={'w-full max-w-md px-4 py-6 bg-slate-50/60 space-y-8'}>
         <div className={'text-xs text-center'}>©FAVOREPEAT</div>
       </footer>
     </div>
