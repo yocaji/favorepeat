@@ -1,13 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-barlow: "Barlow", sans-serif;
+}
 
 @layer base {
   body {
-    @apply bg-slate-400 text-slate-600;
+    @apply bg-slate-400 text-slate-600 font-barlow;
   }
   .textbox {
     @apply p-2
-    border-2 border-transparent
-    bg-slate-50/50
+    border-1 border-slate-500/50
+    bg-slate-50/75
     focus:inset-ring-2 focus:inset-ring-violet-500/25 focus:outline-none
     transition duration-200;
   }
@@ -20,8 +25,8 @@
     transition duration-200 cursor-pointer;
   }
   .selector {
-    @apply w-full
-    bg-slate-50/50 hover:bg-slate-50/75 active:bg-slate-50/100 data-[checked]:bg-violet-50/100
+    @apply w-full shadow-xs
+    bg-slate-50/75 hover:bg-slate-50/100 active:bg-slate-50/100 data-[checked]:bg-slate-50/100
     data-[checked]:inset-ring-2 data-[checked]:inset-ring-violet-500/25;
   }
   .btn-transparent {

@@ -51,12 +51,13 @@ const VideoInput: React.FC<VideoInputProps> = ({
   };
 
   return (
-    <Field>
+    <Field className={'text-left'}>
       <Label className={'text-sm font-bold'}>Video ID or URL</Label>
       <Input
         value={editableVideoId}
         onChange={(e) => setEditableVideoId(e.target.value)}
         className={'textbox w-full mt-1 rounded-lg'}
+        placeholder="Enter YouTube video ID or URL"
       />
       <Button
         onClick={() => handleClickLoadVideo(editableVideoId)}

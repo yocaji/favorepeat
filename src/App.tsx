@@ -1,6 +1,6 @@
 import { Button, Field, Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FaAngleRight, FaHeart, FaRepeat } from 'react-icons/fa6';
+import { FaAngleRight, FaCircle, FaCircleCheck, FaHeart, FaRepeat } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
@@ -13,6 +13,15 @@ function App() {
   const playerRef = useRef<YouTubePlayer | null>(null);
   const [videoId, setVideoId] = useState('');
   const [editableVideoId, setEditableVideoId] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [startTime, setStartTime] = useState('00:00:00');
+  const [endTime, setEndTime] = useState('00:00:00');
+  const [startSeconds, setStartSeconds] = useState(0);
+  const [endSeconds, setEndSeconds] = useState(0);
+  const [editableStartTime, setEditableStartTime] = useState('00:00:00');
+  const [editableEndTime, setEditableEndTime] = useState('00:00:00');
+  const [editableNote, setEditableNote] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState<number>(0);
   const [videos, setVideos] = useLocalStorage<
     { videoId: string; videoTitle: string }[]
   >('videos', []);
@@ -24,16 +33,6 @@ function App() {
       note: string;
     }[]
   >(videoId, []);
-  const [videoTitle, setVideoTitle] = useState('');
-  const [startTime, setStartTime] = useState('00:00:00');
-  const [endTime, setEndTime] = useState('00:00:00');
-  const [startSeconds, setStartSeconds] = useState(0);
-  const [endSeconds, setEndSeconds] = useState(0);
-  const [editableStartTime, setEditableStartTime] = useState('00:00:00');
-  const [editableEndTime, setEditableEndTime] = useState('00:00:00');
-  const [editableNote, setEditableNote] = useState('');
-  const [activeSectionId, setActiveSectionId] = useState<number>(0);
-
   const { opts, setOpts } = useYouTubePlayer({
     videoId,
     activeSectionId,
@@ -216,7 +215,7 @@ function App() {
         <div className={'flex-grow px-4 w-full max-w-md bg-slate-50/40'}>
           <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
             <FaHeart className={'text-xl text-rose-600'} />
-            <span className={'mx-2 text-xl font-bold'}>FAVOREPEAT</span>
+            <span className={'mx-2 text-3xl'}>FAVOREPEAT</span>
             <FaRepeat className={'text-xl text-cyan-600'} />
           </h1>
           {videos.length > 0 && (
@@ -267,6 +266,7 @@ function App() {
               setEditableEndTime={setEditableEndTime}
               editableNote={editableNote}
               setEditableNote={setEditableNote}
+              rows={4} // 追加
             />
             <div className={'flex justify-center'}>
               <SaveSectionButton
@@ -292,28 +292,40 @@ function App() {
               className={'space-y-4'}
             >
               {sections.map((section) => (
-                <div
-                  key={section.id}
-                  className={'flex items-center justify-between space-x-2'}
-                >
-                  <Field className={'flex w-full'}>
-                    <Radio value={section.id} className={'btn selector'}>
-                      <div className={'text-base cursor-pointer'}>
-                        {`${section.startTime} - ${section.endTime}`}
+                <Field key={section.id} className={'relative'}>
+                  <Radio value={section.id} className={'flex w-full btn selector group'}>
+                    <div className={'flex w-full items-center space-x-2'}>
+                      <div>
+                        <FaCircle className={'block text-slate-500/10 group-data-[checked]:hidden'}/>
+                        <FaCircleCheck
+                          className={'hidden group-data-[checked]:block transition duration-200 text-violet-400'}/>
                       </div>
-                      <div className={'text-sm text-gray-600 truncate'}>
-                        {section.note}
+                      <div className={'min-w-0'}>
+                        <div>
+                          {`${section.startTime} - ${section.endTime}`}
+                        </div>
+                        <div className={'text-xs text-slate-500 truncate min-w-0'}>
+                          {section.note}
+                        </div>
                       </div>
-                    </Radio>
-                  </Field>
-                  <DeleteSectionButton
-                    onClick={() => handleClickDeleteSection(section.id)}
-                  />
-                </div>
+                    </div>
+                  </Radio>
+                  <div className={'absolute top-0 right-0'}>
+                    <DeleteSectionButton
+                      onClick={() => handleClickDeleteSection(section.id)}
+                    />
+                  </div>
+                </Field>
               ))}
               <Field className={'flex w-full'}>
-                <Radio value={0} className={'btn selector'}>
-                  <div>New section</div>
+                <Radio value={0} className={'btn selector group'}>
+                  <div className={'flex w-full items-center space-x-2'}>
+                  <div>
+                    <FaCircle className={'block text-slate-500/10 group-data-[checked]:hidden'}/>
+                      <FaCircleCheck className={'hidden group-data-[checked]:block transition duration-200 text-violet-400'} />
+                    </div>
+                    <div>New section</div>
+                  </div>
                 </Radio>
               </Field>
             </RadioGroup>
@@ -337,10 +349,10 @@ function App() {
       </div>
       <footer
         className={
-          'w-full max-w-md px-4 py-6 bg-slate-50/60 text-center space-y-8'
+          'w-full max-w-md px-4 py-6 bg-slate-50/60 space-y-8'
         }
       >
-        <div className={'text-sm'}>©FAVOREPEAT</div>
+        <div className={'text-xs text-center'}>©FAVOREPEAT</div>
       </footer>
     </div>
   );

@@ -49,6 +49,10 @@ export const useYouTubePlayer = ({
   ]);
 
   useEffect(() => {
+    updateOpts();
+  }, []);
+
+  useEffect(() => {
     const updateVideoHeight = () => {
       const width = window.innerWidth;
       const height = (width * 9) / 16;

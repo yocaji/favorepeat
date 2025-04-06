@@ -8,7 +8,13 @@ interface DeleteButtonProps {
 
 const DeleteSectionButton: React.FC<DeleteButtonProps> = ({ onClick }) => {
   return (
-    <Button onClick={onClick} className={'btn btn-transparent'}>
+    <Button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={'btn btn-transparent m-1 p-1'}
+    >
       <span className={'sr-only'}>Delete</span>
       <FaRegTrashAlt />
     </Button>

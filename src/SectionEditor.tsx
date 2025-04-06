@@ -87,6 +87,7 @@ const SectionEditor: React.FC<SectionFormProps> = ({
           value={editableNote}
           onChange={(e) => setEditableNote(e.target.value)}
           className={'textbox w-full rounded-t-lg rounded-bl-lg'}
+          rows={5}
         />
       </Field>
     </>
