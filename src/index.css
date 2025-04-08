@@ -1,8 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-barlow: "Barlow", sans-serif;
+  --font-barlow: "Barlow", "Noto Sans JP", sans-serif;
 }
 
 @layer base {
@@ -18,7 +19,6 @@
   }
   .btn {
     @apply p-2 rounded-lg
-    border-2 border-transparent
     bg-slate-500/25 hover:bg-slate-500/50 active:bg-slate-50/50
     focus:inset-ring-2 focus:inset-ring-violet-500/25
     disabled:cursor-not-allowed disabled:text-slate-400 disabled:bg-slate-500/10

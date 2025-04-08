@@ -230,7 +230,7 @@ function App() {
                 <Button
                   key={video.videoId}
                   className={
-                    'btn selector w-full flex items-center justify-between space-x-2'
+                    'btn selector w-full flex items-center justify-between'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -239,10 +239,14 @@ function App() {
                   <img
                     src={`https://img.youtube.com/vi/${video.videoId}/default.jpg`}
                     alt={`${video.videoTitle} thumbnail`}
-                    className={'w-16 h-9 object-cover rounded'}
+                    className={'w-16 h-9 flex-none object-cover rounded'}
                   />
-                  <div className={'truncate'}>{video.videoTitle}</div>
-                  <FaAngleRight className={'text-slate-400'} />
+                  <div className={'ml-3 flex-grow text-left truncate'}>
+                    {video.videoTitle}
+                  </div>
+                  <FaAngleRight
+                    className={'w-6 ml-3 flex-none text-slate-400 text-lg'}
+                  />
                 </Button>
               ))}
             </div>
