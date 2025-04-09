@@ -69,11 +69,6 @@ function App() {
 
   useEffect(() => {
     if (activeSectionId === 0) {
-      seekSection({
-        id: 0,
-        startTime: '00:00:00',
-        endTime: '00:00:00',
-      });
       clearSectionEditor();
       return;
     }
