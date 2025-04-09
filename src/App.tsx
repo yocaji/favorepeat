@@ -230,7 +230,7 @@ function App() {
                 <Button
                   key={video.videoId}
                   className={
-                    'btn selector w-full flex items-center justify-between'
+                    'selector w-full flex items-center justify-between'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -307,7 +307,7 @@ function App() {
                 <Field key={section.id} className={'relative'}>
                   <Radio
                     value={section.id}
-                    className={'flex w-full btn selector group'}
+                    className={'flex w-full selector group px-3'}
                   >
                     <div className={'flex w-full items-center space-x-2'}>
                       <div>
@@ -340,7 +340,7 @@ function App() {
                 </Field>
               ))}
               <Field className={'flex w-full'}>
-                <Radio value={0} className={'btn selector group'}>
+                <Radio value={0} className={'selector group px-3'}>
                   <div className={'flex w-full items-center space-x-2'}>
                     <div>
                       <FaCircle

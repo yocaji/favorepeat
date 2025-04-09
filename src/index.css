@@ -25,9 +25,11 @@
     transition duration-200 cursor-pointer;
   }
   .selector {
-    @apply w-full shadow-xs
+    @apply w-full shadow-xs p-2 rounded-lg
     bg-slate-50/75 hover:bg-slate-50/100 active:bg-slate-50/100 data-[checked]:bg-slate-50/100
-    data-[checked]:inset-ring-2 data-[checked]:inset-ring-violet-500/25;
+    focus:inset-ring-2 focus:inset-ring-violet-500/25
+    data-[checked]:inset-ring-2 data-[checked]:inset-ring-violet-500/25
+    transition duration-200 cursor-pointer;
   }
   .btn-transparent {
     @apply bg-transparent;
