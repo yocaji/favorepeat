@@ -1,10 +1,6 @@
 import { Button, Field, Radio, RadioGroup } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
-import {
-  FaAngleRight,
-  FaCircle,
-  FaCircleCheck,
-} from 'react-icons/fa6';
+import { FaAngleRight, FaCircle, FaCircleCheck } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
 import SaveSectionButton from './SaveSectionButton.tsx';
@@ -215,7 +211,7 @@ function App() {
           <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
             <img
               src={'/favorepeat/logomark.svg'}
-              alt={'FavoRepeat\'s logomark'}
+              alt={"FavoRepeat's logomark"}
               className={'w-7 h-7'}
             />
             <span className={'mx-2 text-3xl'}>FAVOREPEAT</span>
