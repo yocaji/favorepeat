@@ -208,7 +208,7 @@ function App() {
     <div className={'flex flex-col items-center min-h-dvh'}>
       {!videoId && (
         <div className={'flex-grow px-4 w-full max-w-md bg-slate-50/40'}>
-          <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
+          <h1 className={'flex items-center mt-6 mb-6 justify-center'}>
             <img
               src={'/favorepeat/logomark.svg'}
               alt={"FavoRepeat's logomark"}
