@@ -4,8 +4,6 @@ import {
   FaAngleRight,
   FaCircle,
   FaCircleCheck,
-  FaHeart,
-  FaRepeat,
 } from 'react-icons/fa6';
 import YouTube, { type YouTubePlayer, type YouTubeProps } from 'react-youtube';
 import DeleteSectionButton from './DeleteSectionButton.tsx';
@@ -215,9 +213,12 @@ function App() {
       {!videoId && (
         <div className={'flex-grow px-4 w-full max-w-md bg-slate-50/40'}>
           <h1 className={'flex items-center mt-4 mb-6 justify-center'}>
-            <FaHeart className={'text-xl text-rose-600'} />
+            <img
+              src={'/favorepeat/logomark.svg'}
+              alt={'FavoRepeat\'s logomark'}
+              className={'w-7 h-7'}
+            />
             <span className={'mx-2 text-3xl'}>FAVOREPEAT</span>
-            <FaRepeat className={'text-xl text-cyan-600'} />
           </h1>
           {videos.length > 0 && (
             <div className={'space-y-2'}>
@@ -225,7 +226,7 @@ function App() {
                 <Button
                   key={video.videoId}
                   className={
-                    'selector w-full flex items-center justify-between'
+                    'selector w-full h-11 flex items-center justify-between'
                   }
                   onClick={() =>
                     handleClickStoredVideo(video.videoId, video.videoTitle)
@@ -234,13 +235,13 @@ function App() {
                   <img
                     src={`https://img.youtube.com/vi/${video.videoId}/default.jpg`}
                     alt={`${video.videoTitle} thumbnail`}
-                    className={'w-16 h-9 flex-none object-cover rounded'}
+                    className={'w-22 h-11 flex-none object-cover rounded-l-lg'}
                   />
-                  <div className={'ml-3 flex-grow text-left truncate'}>
+                  <div className={'mx-2 flex-grow text-left truncate'}>
                     {video.videoTitle}
                   </div>
                   <FaAngleRight
-                    className={'w-6 ml-3 flex-none text-slate-400 text-lg'}
+                    className={'w-6 mr-2 flex-none text-slate-400 text-lg'}
                   />
                 </Button>
               ))}
@@ -302,7 +303,7 @@ function App() {
                 <Field key={section.id} className={'relative'}>
                   <Radio
                     value={section.id}
-                    className={'flex w-full selector group px-3'}
+                    className={'flex w-full selector group px-3 py-2'}
                   >
                     <div className={'flex w-full items-center space-x-2'}>
                       <div>
@@ -335,7 +336,7 @@ function App() {
                 </Field>
               ))}
               <Field className={'flex w-full'}>
-                <Radio value={0} className={'selector group px-3'}>
+                <Radio value={0} className={'selector group px-3 py-2'}>
                   <div className={'flex w-full items-center space-x-2'}>
                     <div>
                       <FaCircle
